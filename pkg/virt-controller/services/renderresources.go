@@ -26,6 +26,7 @@ type ResourceRenderer struct {
 	vmRequests         k8sv1.ResourceList
 	calculatedLimits   k8sv1.ResourceList
 	calculatedRequests k8sv1.ResourceList
+	claims             []k8sv1.ResourceClaim
 }
 
 type resourcePredicate func(*v1.VirtualMachineInstance) bool
@@ -72,6 +73,7 @@ func NewResourceRenderer(vmLimits k8sv1.ResourceList, vmRequests k8sv1.ResourceL
 		vmRequests:         requests,
 		calculatedLimits:   map[k8sv1.ResourceName]resource.Quantity{},
 		calculatedRequests: map[k8sv1.ResourceName]resource.Quantity{},
+		claims:             []k8sv1.ResourceClaim{},
 	}
 
 	for _, opt := range options {
@@ -94,10 +96,15 @@ func (rr *ResourceRenderer) Requests() k8sv1.ResourceList {
 	return podRequests
 }
 
+func (rr *ResourceRenderer) Claims() []k8sv1.ResourceClaim {
+	return rr.claims
+}
+
 func (rr *ResourceRenderer) ResourceRequirements() k8sv1.ResourceRequirements {
 	return k8sv1.ResourceRequirements{
 		Limits:   rr.Limits(),
 		Requests: rr.Requests(),
+		Claims:   rr.Claims(),
 	}
 }
 
@@ -275,10 +282,16 @@ func WithGPUs(gpus []v1.GPU) ResourceRendererOption {
 	return func(renderer *ResourceRenderer) {
 		resources := renderer.ResourceRequirements()
 		for _, gpu := range gpus {
-			requestResource(&resources, gpu.DeviceName)
+			if gpu.DeviceName != "" {
+				requestResource(&resources, gpu.DeviceName)
+			}
+			if gpu.Claim != nil {
+				requestResourceClaims(&resources, gpu.Claim)
+			}
 		}
 		copyResources(resources.Limits, renderer.calculatedLimits)
 		copyResources(resources.Requests, renderer.calculatedRequests)
+		copyResourceClaims(&resources, &renderer.claims)
 	}
 }
 
@@ -286,10 +299,16 @@ func WithHostDevices(hostDevices []v1.HostDevice) ResourceRendererOption {
 	return func(renderer *ResourceRenderer) {
 		resources := renderer.ResourceRequirements()
 		for _, hostDev := range hostDevices {
-			requestResource(&resources, hostDev.DeviceName)
+			if hostDev.DeviceName != "" {
+				requestResource(&resources, hostDev.DeviceName)
+			}
+			if hostDev.Claim != nil {
+				requestResourceClaims(&resources, hostDev.Claim)
+			}
 		}
 		copyResources(resources.Limits, renderer.calculatedLimits)
 		copyResources(resources.Requests, renderer.calculatedRequests)
+		copyResourceClaims(&resources, &renderer.claims)
 	}
 }
 
@@ -314,6 +333,21 @@ func WithPersistentReservation() ResourceRendererOption {
 func copyResources(srcResources, dstResources k8sv1.ResourceList) {
 	for key, value := range srcResources {
 		dstResources[key] = value
+	}
+}
+
+// TODO: make this a generic
+func requestResourceClaims(resources *k8sv1.ResourceRequirements, claim *k8sv1.ResourceClaim) {
+	if resources.Claims == nil {
+		resources.Claims = []k8sv1.ResourceClaim{*claim}
+		return
+	}
+	resources.Claims = append(resources.Claims, *claim)
+}
+
+func copyResourceClaims(resources *k8sv1.ResourceRequirements, claims *[]k8sv1.ResourceClaim) {
+	for _, value := range resources.Claims {
+		*claims = append(*claims, value)
 	}
 }
 
@@ -523,11 +557,12 @@ func validatePermittedHostDevices(spec *v1.VirtualMachineInstanceSpec, config *v
 		for _, dev := range hostDevs.USB {
 			supportedHostDevicesMap[dev.ResourceName] = true
 		}
-		for _, hostDev := range spec.Domain.Devices.GPUs {
-			if _, exist := supportedHostDevicesMap[hostDev.DeviceName]; !exist {
-				errors = append(errors, fmt.Sprintf("GPU %s is not permitted in permittedHostDevices configuration", hostDev.DeviceName))
-			}
-		}
+		//TODO @alayp: add proper validation after POC
+		//for _, hostDev := range spec.Domain.Devices.GPUs {
+		//	if _, exist := supportedHostDevicesMap[hostDev.DeviceName]; !exist {
+		//		errors = append(errors, fmt.Sprintf("GPU %s is not permitted in permittedHostDevices configuration", hostDev.DeviceName))
+		//	}
+		//}
 		for _, hostDev := range spec.Domain.Devices.HostDevices {
 			if _, exist := supportedHostDevicesMap[hostDev.DeviceName]; !exist {
 				errors = append(errors, fmt.Sprintf("HostDevice %s is not permitted in permittedHostDevices configuration", hostDev.DeviceName))
