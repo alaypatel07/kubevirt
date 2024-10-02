@@ -39,6 +39,7 @@ func (VirtualMachineInstanceSpec) SwaggerDoc() map[string]string {
 		"dnsConfig":                     "Specifies the DNS parameters of a pod.\nParameters specified here will be merged to the generated DNS\nconfiguration based on DNSPolicy.\n+optional",
 		"accessCredentials":             "Specifies a set of public keys to inject into the vm guest\n+listType=atomic\n+optional\n+kubebuilder:validation:MaxItems:=256",
 		"architecture":                  "Specifies the architecture of the vm guest you are attempting to run. Defaults to the compiled architecture of the KubeVirt components",
+		"resourceClaims":                "ResourceClaims defines which ResourceClaims must be allocated\nand reserved before the VMI and hence virt-launcher pod is allowed to start. The resources\nwill be made available to the domain which consume them\nby name.\n\nThis is an alpha field and requires enabling the\nDynamicResourceAllocation feature gate in kubernetes\n https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/\n\nThis field is immutable.\n\n+listType=map\n+listMapKey=name\n+optional",
 	}
 }
 
@@ -83,6 +84,7 @@ func (VirtualMachineInstanceStatus) SwaggerDoc() map[string]string {
 		"currentCPUTopology":            "CurrentCPUTopology specifies the current CPU topology used by the VM workload.\nCurrent topology may differ from the desired topology in the spec while CPU hotplug\ntakes place.",
 		"memory":                        "Memory shows various informations about the VirtualMachine memory.\n+optional",
 		"migratedVolumes":               "MigratedVolumes lists the source and destination volumes during the volume migration\n+listType=atomic\n+optional",
+		"resourceClaimStatuses":         "Status of resource claims.\n+listType=map\n+listMapKey=name\n+optional",
 	}
 }
 

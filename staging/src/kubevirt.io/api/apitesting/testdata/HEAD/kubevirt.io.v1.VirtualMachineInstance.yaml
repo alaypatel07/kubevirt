@@ -273,7 +273,10 @@ spec:
       - name: nameValue
         virtiofs: {}
       gpus:
-      - deviceName: deviceNameValue
+      - claim:
+          name: nameValue
+          request: requestValue
+        deviceName: deviceNameValue
         name: nameValue
         tag: tagValue
         virtualGPUOptions:
@@ -282,7 +285,10 @@ spec:
             ramFB:
               enabled: true
       hostDevices:
-      - deviceName: deviceNameValue
+      - claim:
+          name: nameValue
+          request: requestValue
+        deviceName: deviceNameValue
         name: nameValue
         tag: tagValue
       inputs:
@@ -475,6 +481,10 @@ spec:
       host: hostValue
       port: portValue
     timeoutSeconds: -14
+  resourceClaims:
+  - name: nameValue
+    resourceClaimName: resourceClaimNameValue
+    resourceClaimTemplateName: resourceClaimTemplateNameValue
   schedulerName: schedulerNameValue
   startStrategy: startStrategyValue
   subdomain: subdomainValue
@@ -699,6 +709,9 @@ status:
     phaseTransitionTimestamp: "1976-01-01T01:01:01Z"
   qosClass: qosClassValue
   reason: reasonValue
+  resourceClaimStatuses:
+  - name: nameValue
+    resourceClaimName: resourceClaimNameValue
   runtimeUser: 18446744073709551605
   selinuxContext: selinuxContextValue
   topologyHints:

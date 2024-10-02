@@ -565,6 +565,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubevirt.io/api/core/v1.VirtualMachineStateChangeRequest":                                   schema_kubevirtio_api_core_v1_VirtualMachineStateChangeRequest(ref),
 		"kubevirt.io/api/core/v1.VirtualMachineStatus":                                               schema_kubevirtio_api_core_v1_VirtualMachineStatus(ref),
 		"kubevirt.io/api/core/v1.VirtualMachineVolumeRequest":                                        schema_kubevirtio_api_core_v1_VirtualMachineVolumeRequest(ref),
+		"kubevirt.io/api/core/v1.VitualMachineInstanceResourceClaimStatus":                           schema_kubevirtio_api_core_v1_VitualMachineInstanceResourceClaimStatus(ref),
 		"kubevirt.io/api/core/v1.Volume":                                                             schema_kubevirtio_api_core_v1_Volume(ref),
 		"kubevirt.io/api/core/v1.VolumeMigrationState":                                               schema_kubevirtio_api_core_v1_VolumeMigrationState(ref),
 		"kubevirt.io/api/core/v1.VolumeSnapshotStatus":                                               schema_kubevirtio_api_core_v1_VolumeSnapshotStatus(ref),
@@ -20097,9 +20098,15 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 					},
 					"deviceName": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "DeviceName is the name of the device provisioned by device-plugins",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"claim": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Claim is the name of the claim that is going to provision the DRA device",
+							Ref:         ref("k8s.io/api/core/v1.ResourceClaim"),
 						},
 					},
 					"virtualGPUOptions": {
@@ -20115,11 +20122,11 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 						},
 					},
 				},
-				Required: []string{"name", "deviceName"},
+				Required: []string{"name"},
 			},
 		},
 		Dependencies: []string{
-			"kubevirt.io/api/core/v1.VGPUOptions"},
+			"k8s.io/api/core/v1.ResourceClaim", "kubevirt.io/api/core/v1.VGPUOptions"},
 	}
 }
 
@@ -20301,10 +20308,15 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 					},
 					"deviceName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DeviceName is the resource name of the host device exposed by a device plugin",
-							Default:     "",
+							Description: "DeviceName is the name of the device provisioned by device-plugins",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"claim": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Claim is the name of the claim that is going to provision the DRA device",
+							Ref:         ref("k8s.io/api/core/v1.ResourceClaim"),
 						},
 					},
 					"tag": {
@@ -20315,9 +20327,11 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"name", "deviceName"},
+				Required: []string{"name"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.ResourceClaim"},
 	}
 }
 
@@ -26601,12 +26615,34 @@ func schema_kubevirtio_api_core_v1_VirtualMachineInstanceSpec(ref common.Referen
 							Format:      "",
 						},
 					},
+					"resourceClaims": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "ResourceClaims defines which ResourceClaims must be allocated and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources will be made available to the domain which consume them by name.\n\nThis is an alpha field and requires enabling the DynamicResourceAllocation feature gate in kubernetes\n https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/\n\nThis field is immutable.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/api/core/v1.PodResourceClaim"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"domain"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.PodDNSConfig", "k8s.io/api/core/v1.Toleration", "k8s.io/api/core/v1.TopologySpreadConstraint", "kubevirt.io/api/core/v1.AccessCredential", "kubevirt.io/api/core/v1.DomainSpec", "kubevirt.io/api/core/v1.Network", "kubevirt.io/api/core/v1.Probe", "kubevirt.io/api/core/v1.Volume"},
+			"k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.PodDNSConfig", "k8s.io/api/core/v1.PodResourceClaim", "k8s.io/api/core/v1.Toleration", "k8s.io/api/core/v1.TopologySpreadConstraint", "kubevirt.io/api/core/v1.AccessCredential", "kubevirt.io/api/core/v1.DomainSpec", "kubevirt.io/api/core/v1.Network", "kubevirt.io/api/core/v1.Probe", "kubevirt.io/api/core/v1.Volume"},
 	}
 }
 
@@ -26853,11 +26889,33 @@ func schema_kubevirtio_api_core_v1_VirtualMachineInstanceStatus(ref common.Refer
 							},
 						},
 					},
+					"resourceClaimStatuses": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of resource claims.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("kubevirt.io/api/core/v1.VitualMachineInstanceResourceClaimStatus"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"kubevirt.io/api/core/v1.CPUTopology", "kubevirt.io/api/core/v1.KernelBootStatus", "kubevirt.io/api/core/v1.Machine", "kubevirt.io/api/core/v1.MemoryStatus", "kubevirt.io/api/core/v1.StorageMigratedVolumeInfo", "kubevirt.io/api/core/v1.TopologyHints", "kubevirt.io/api/core/v1.VirtualMachineInstanceCondition", "kubevirt.io/api/core/v1.VirtualMachineInstanceGuestOSInfo", "kubevirt.io/api/core/v1.VirtualMachineInstanceMigrationState", "kubevirt.io/api/core/v1.VirtualMachineInstanceNetworkInterface", "kubevirt.io/api/core/v1.VirtualMachineInstancePhaseTransitionTimestamp", "kubevirt.io/api/core/v1.VolumeStatus"},
+			"kubevirt.io/api/core/v1.CPUTopology", "kubevirt.io/api/core/v1.KernelBootStatus", "kubevirt.io/api/core/v1.Machine", "kubevirt.io/api/core/v1.MemoryStatus", "kubevirt.io/api/core/v1.StorageMigratedVolumeInfo", "kubevirt.io/api/core/v1.TopologyHints", "kubevirt.io/api/core/v1.VirtualMachineInstanceCondition", "kubevirt.io/api/core/v1.VirtualMachineInstanceGuestOSInfo", "kubevirt.io/api/core/v1.VirtualMachineInstanceMigrationState", "kubevirt.io/api/core/v1.VirtualMachineInstanceNetworkInterface", "kubevirt.io/api/core/v1.VirtualMachineInstancePhaseTransitionTimestamp", "kubevirt.io/api/core/v1.VitualMachineInstanceResourceClaimStatus", "kubevirt.io/api/core/v1.VolumeStatus"},
 	}
 }
 
@@ -27358,6 +27416,34 @@ func schema_kubevirtio_api_core_v1_VirtualMachineVolumeRequest(ref common.Refere
 		},
 		Dependencies: []string{
 			"kubevirt.io/api/core/v1.AddVolumeOptions", "kubevirt.io/api/core/v1.RemoveVolumeOptions"},
+	}
+}
+
+func schema_kubevirtio_api_core_v1_VitualMachineInstanceResourceClaimStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name uniquely identifies this resource claim inside the pod. This must match the name of an entry in pod.spec.resourceClaims, which implies that the string must be a DNS_LABEL.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"resourceClaimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ResourceClaimName is the name of the ResourceClaim that was generated for the Pod in the namespace of the Pod. If this is unset, then generating a ResourceClaim was not necessary. The pod.spec.resourceClaims entry can be ignored in this case.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name"},
+			},
+		},
 	}
 }
 

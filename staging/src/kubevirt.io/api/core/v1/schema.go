@@ -595,7 +595,7 @@ type GPU struct {
 	DeviceName string `json:"deviceName,omitempty"`
 	// Claim is the name of the claim that is going to provision the DRA device
 	Claim             *v1.ResourceClaim `json:"claim,omitempty"`
-	VirtualGPUOptions *VGPUOptions         `json:"virtualGPUOptions,omitempty"`
+	VirtualGPUOptions *VGPUOptions      `json:"virtualGPUOptions,omitempty"`
 	// If specified, the virtual network interface address and its tag will be provided to the guest via config drive
 	// +optional
 	Tag string `json:"tag,omitempty"`
