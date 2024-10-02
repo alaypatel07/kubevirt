@@ -590,9 +590,12 @@ type DownwardMetrics struct{}
 
 type GPU struct {
 	// Name of the GPU device as exposed by a device plugin
-	Name              string       `json:"name"`
-	DeviceName        string       `json:"deviceName"`
-	VirtualGPUOptions *VGPUOptions `json:"virtualGPUOptions,omitempty"`
+	Name string `json:"name"`
+	// DeviceName is the name of the device provisioned by device-plugins
+	DeviceName string `json:"deviceName,omitempty"`
+	// Claim is the name of the claim that is going to provision the DRA device
+	Claim             *v1.ResourceClaim `json:"claim,omitempty"`
+	VirtualGPUOptions *VGPUOptions         `json:"virtualGPUOptions,omitempty"`
 	// If specified, the virtual network interface address and its tag will be provided to the guest via config drive
 	// +optional
 	Tag string `json:"tag,omitempty"`
@@ -615,8 +618,10 @@ type VGPUDisplayOptions struct {
 
 type HostDevice struct {
 	Name string `json:"name"`
-	// DeviceName is the resource name of the host device exposed by a device plugin
-	DeviceName string `json:"deviceName"`
+	// DeviceName is the name of the device provisioned by device-plugins
+	DeviceName string `json:"deviceName,omitempty"`
+	// Claim is the name of the claim that is going to provision the DRA device
+	Claim *v1.ResourceClaim `json:"claim,omitempty"`
 	// If specified, the virtual network interface address and its tag will be provided to the guest via config drive
 	// +optional
 	Tag string `json:"tag,omitempty"`
