@@ -6192,7 +6192,22 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a GPU device to the vmi.
                           items:
                             properties:
+                              claim:
+                                description: Claim is the name of the claim that is
+                                  going to provision the DRA device
+                                properties:
+                                  name:
+                                    description: |-
+                                      Name must match the name of one entry in pod.spec.resourceClaims of
+                                      the Pod where this field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                - name
+                                type: object
                               deviceName:
+                                description: DeviceName is the name of the device
+                                  provisioned by device-plugins
                                 type: string
                               name:
                                 description: Name of the GPU device as exposed by
@@ -6226,7 +6241,6 @@ var CRDsValidation map[string]string = map[string]string{
                                     type: object
                                 type: object
                             required:
-                            - deviceName
                             - name
                             type: object
                           type: array
@@ -6235,9 +6249,22 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a host device to the vmi.
                           items:
                             properties:
+                              claim:
+                                description: Claim is the name of the claim that is
+                                  going to provision the DRA device
+                                properties:
+                                  name:
+                                    description: |-
+                                      Name must match the name of one entry in pod.spec.resourceClaims of
+                                      the Pod where this field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                - name
+                                type: object
                               deviceName:
-                                description: DeviceName is the resource name of the
-                                  host device exposed by a device plugin
+                                description: DeviceName is the name of the device
+                                  provisioned by device-plugins
                                 type: string
                               name:
                                 type: string
@@ -6247,7 +6274,6 @@ var CRDsValidation map[string]string = map[string]string{
                                   via config drive
                                 type: string
                             required:
-                            - deviceName
                             - name
                             type: object
                           type: array
@@ -7309,6 +7335,64 @@ var CRDsValidation map[string]string = map[string]string{
                       format: int32
                       type: integer
                   type: object
+                resourceClaims:
+                  description: |-
+                    ResourceClaims defines which ResourceClaims must be allocated
+                    and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources
+                    will be made available to the domain which consume them
+                    by name.
+
+
+                    This is an alpha field and requires enabling the
+                    DynamicResourceAllocation feature gate in kubernetes
+                     https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
+
+
+                    This field is immutable.
+                  items:
+                    description: |-
+                      PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                      It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
+                      Containers that need access to the ResourceClaim reference it with this name.
+                    properties:
+                      name:
+                        description: |-
+                          Name uniquely identifies this resource claim inside the pod.
+                          This must be a DNS_LABEL.
+                        type: string
+                      source:
+                        description: Source describes where to find the ResourceClaim.
+                        properties:
+                          resourceClaimName:
+                            description: |-
+                              ResourceClaimName is the name of a ResourceClaim object in the same
+                              namespace as this pod.
+                            type: string
+                          resourceClaimTemplateName:
+                            description: |-
+                              ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                              object in the same namespace as this pod.
+
+
+                              The template will be used to create a new ResourceClaim, which will
+                              be bound to this pod. When this pod is deleted, the ResourceClaim
+                              will also be deleted. The pod name and resource name, along with a
+                              generated component, will be used to form a unique name for the
+                              ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+
+
+                              This field is immutable and no changes will be made to the
+                              corresponding ResourceClaim by the control plane after creating the
+                              ResourceClaim.
+                            type: string
+                        type: object
+                    required:
+                    - name
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                  - name
+                  x-kubernetes-list-type: map
                 schedulerName:
                   description: |-
                     If specified, the VMI will be dispatched by specified scheduler.
@@ -8808,7 +8892,21 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any GPU devices associated with the instancetype.
           items:
             properties:
+              claim:
+                description: Claim is the name of the claim that is going to provision
+                  the DRA device
+                properties:
+                  name:
+                    description: |-
+                      Name must match the name of one entry in pod.spec.resourceClaims of
+                      the Pod where this field is used. It makes that resource available
+                      inside a container.
+                    type: string
+                required:
+                - name
+                type: object
               deviceName:
+                description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
                 description: Name of the GPU device as exposed by a device plugin
@@ -8840,7 +8938,6 @@ var CRDsValidation map[string]string = map[string]string{
                     type: object
                 type: object
             required:
-            - deviceName
             - name
             type: object
           type: array
@@ -8849,9 +8946,21 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any HostDevices associated with the instancetype.
           items:
             properties:
+              claim:
+                description: Claim is the name of the claim that is going to provision
+                  the DRA device
+                properties:
+                  name:
+                    description: |-
+                      Name must match the name of one entry in pod.spec.resourceClaims of
+                      the Pod where this field is used. It makes that resource available
+                      inside a container.
+                    type: string
+                required:
+                - name
+                type: object
               deviceName:
-                description: DeviceName is the resource name of the host device exposed
-                  by a device plugin
+                description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
                 type: string
@@ -8860,7 +8969,6 @@ var CRDsValidation map[string]string = map[string]string{
                   its tag will be provided to the guest via config drive
                 type: string
             required:
-            - deviceName
             - name
             type: object
           type: array
@@ -11400,7 +11508,22 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a GPU device to the vmi.
                   items:
                     properties:
+                      claim:
+                        description: Claim is the name of the claim that is going
+                          to provision the DRA device
+                        properties:
+                          name:
+                            description: |-
+                              Name must match the name of one entry in pod.spec.resourceClaims of
+                              the Pod where this field is used. It makes that resource available
+                              inside a container.
+                            type: string
+                        required:
+                        - name
+                        type: object
                       deviceName:
+                        description: DeviceName is the name of the device provisioned
+                          by device-plugins
                         type: string
                       name:
                         description: Name of the GPU device as exposed by a device
@@ -11433,7 +11556,6 @@ var CRDsValidation map[string]string = map[string]string{
                             type: object
                         type: object
                     required:
-                    - deviceName
                     - name
                     type: object
                   type: array
@@ -11442,9 +11564,22 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a host device to the vmi.
                   items:
                     properties:
+                      claim:
+                        description: Claim is the name of the claim that is going
+                          to provision the DRA device
+                        properties:
+                          name:
+                            description: |-
+                              Name must match the name of one entry in pod.spec.resourceClaims of
+                              the Pod where this field is used. It makes that resource available
+                              inside a container.
+                            type: string
+                        required:
+                        - name
+                        type: object
                       deviceName:
-                        description: DeviceName is the resource name of the host device
-                          exposed by a device plugin
+                        description: DeviceName is the name of the device provisioned
+                          by device-plugins
                         type: string
                       name:
                         type: string
@@ -11453,7 +11588,6 @@ var CRDsValidation map[string]string = map[string]string{
                           and its tag will be provided to the guest via config drive
                         type: string
                     required:
-                    - deviceName
                     - name
                     type: object
                   type: array
@@ -12505,6 +12639,64 @@ var CRDsValidation map[string]string = map[string]string{
               format: int32
               type: integer
           type: object
+        resourceClaims:
+          description: |-
+            ResourceClaims defines which ResourceClaims must be allocated
+            and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources
+            will be made available to the domain which consume them
+            by name.
+
+
+            This is an alpha field and requires enabling the
+            DynamicResourceAllocation feature gate in kubernetes
+             https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
+
+
+            This field is immutable.
+          items:
+            description: |-
+              PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+              It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
+              Containers that need access to the ResourceClaim reference it with this name.
+            properties:
+              name:
+                description: |-
+                  Name uniquely identifies this resource claim inside the pod.
+                  This must be a DNS_LABEL.
+                type: string
+              source:
+                description: Source describes where to find the ResourceClaim.
+                properties:
+                  resourceClaimName:
+                    description: |-
+                      ResourceClaimName is the name of a ResourceClaim object in the same
+                      namespace as this pod.
+                    type: string
+                  resourceClaimTemplateName:
+                    description: |-
+                      ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                      object in the same namespace as this pod.
+
+
+                      The template will be used to create a new ResourceClaim, which will
+                      be bound to this pod. When this pod is deleted, the ResourceClaim
+                      will also be deleted. The pod name and resource name, along with a
+                      generated component, will be used to form a unique name for the
+                      ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+
+
+                      This field is immutable and no changes will be made to the
+                      corresponding ResourceClaim by the control plane after creating the
+                      ResourceClaim.
+                    type: string
+                type: object
+            required:
+            - name
+            type: object
+          type: array
+          x-kubernetes-list-map-keys:
+          - name
+          x-kubernetes-list-type: map
         schedulerName:
           description: |-
             If specified, the VMI will be dispatched by specified scheduler.
@@ -13706,6 +13898,34 @@ var CRDsValidation map[string]string = map[string]string{
           description: A brief CamelCase message indicating details about why the
             VMI is in this state. e.g. 'NodeUnresponsive'
           type: string
+        resourceClaimStatuses:
+          description: Status of resource claims.
+          items:
+            description: |-
+              PodResourceClaimStatus is stored in the PodStatus for each PodResourceClaim
+              which references a ResourceClaimTemplate. It stores the generated name for
+              the corresponding ResourceClaim.
+            properties:
+              name:
+                description: |-
+                  Name uniquely identifies this resource claim inside the pod.
+                  This must match the name of an entry in pod.spec.resourceClaims,
+                  which implies that the string must be a DNS_LABEL.
+                type: string
+              resourceClaimName:
+                description: |-
+                  ResourceClaimName is the name of the ResourceClaim that was
+                  generated for the Pod in the namespace of the Pod. It this is
+                  unset, then generating a ResourceClaim was not necessary. The
+                  pod.spec.resourceClaims entry can be ignored in this case.
+                type: string
+            required:
+            - name
+            type: object
+          type: array
+          x-kubernetes-list-map-keys:
+          - name
+          x-kubernetes-list-type: map
         runtimeUser:
           description: RuntimeUser is used to determine what user will be used in
             launcher
@@ -14541,7 +14761,22 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a GPU device to the vmi.
                   items:
                     properties:
+                      claim:
+                        description: Claim is the name of the claim that is going
+                          to provision the DRA device
+                        properties:
+                          name:
+                            description: |-
+                              Name must match the name of one entry in pod.spec.resourceClaims of
+                              the Pod where this field is used. It makes that resource available
+                              inside a container.
+                            type: string
+                        required:
+                        - name
+                        type: object
                       deviceName:
+                        description: DeviceName is the name of the device provisioned
+                          by device-plugins
                         type: string
                       name:
                         description: Name of the GPU device as exposed by a device
@@ -14574,7 +14809,6 @@ var CRDsValidation map[string]string = map[string]string{
                             type: object
                         type: object
                     required:
-                    - deviceName
                     - name
                     type: object
                   type: array
@@ -14583,9 +14817,22 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a host device to the vmi.
                   items:
                     properties:
+                      claim:
+                        description: Claim is the name of the claim that is going
+                          to provision the DRA device
+                        properties:
+                          name:
+                            description: |-
+                              Name must match the name of one entry in pod.spec.resourceClaims of
+                              the Pod where this field is used. It makes that resource available
+                              inside a container.
+                            type: string
+                        required:
+                        - name
+                        type: object
                       deviceName:
-                        description: DeviceName is the resource name of the host device
-                          exposed by a device plugin
+                        description: DeviceName is the name of the device provisioned
+                          by device-plugins
                         type: string
                       name:
                         type: string
@@ -14594,7 +14841,6 @@ var CRDsValidation map[string]string = map[string]string{
                           and its tag will be provided to the guest via config drive
                         type: string
                     required:
-                    - deviceName
                     - name
                     type: object
                   type: array
@@ -16945,7 +17191,22 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a GPU device to the vmi.
                           items:
                             properties:
+                              claim:
+                                description: Claim is the name of the claim that is
+                                  going to provision the DRA device
+                                properties:
+                                  name:
+                                    description: |-
+                                      Name must match the name of one entry in pod.spec.resourceClaims of
+                                      the Pod where this field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                - name
+                                type: object
                               deviceName:
+                                description: DeviceName is the name of the device
+                                  provisioned by device-plugins
                                 type: string
                               name:
                                 description: Name of the GPU device as exposed by
@@ -16979,7 +17240,6 @@ var CRDsValidation map[string]string = map[string]string{
                                     type: object
                                 type: object
                             required:
-                            - deviceName
                             - name
                             type: object
                           type: array
@@ -16988,9 +17248,22 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a host device to the vmi.
                           items:
                             properties:
+                              claim:
+                                description: Claim is the name of the claim that is
+                                  going to provision the DRA device
+                                properties:
+                                  name:
+                                    description: |-
+                                      Name must match the name of one entry in pod.spec.resourceClaims of
+                                      the Pod where this field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                - name
+                                type: object
                               deviceName:
-                                description: DeviceName is the resource name of the
-                                  host device exposed by a device plugin
+                                description: DeviceName is the name of the device
+                                  provisioned by device-plugins
                                 type: string
                               name:
                                 type: string
@@ -17000,7 +17273,6 @@ var CRDsValidation map[string]string = map[string]string{
                                   via config drive
                                 type: string
                             required:
-                            - deviceName
                             - name
                             type: object
                           type: array
@@ -18062,6 +18334,64 @@ var CRDsValidation map[string]string = map[string]string{
                       format: int32
                       type: integer
                   type: object
+                resourceClaims:
+                  description: |-
+                    ResourceClaims defines which ResourceClaims must be allocated
+                    and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources
+                    will be made available to the domain which consume them
+                    by name.
+
+
+                    This is an alpha field and requires enabling the
+                    DynamicResourceAllocation feature gate in kubernetes
+                     https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
+
+
+                    This field is immutable.
+                  items:
+                    description: |-
+                      PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                      It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
+                      Containers that need access to the ResourceClaim reference it with this name.
+                    properties:
+                      name:
+                        description: |-
+                          Name uniquely identifies this resource claim inside the pod.
+                          This must be a DNS_LABEL.
+                        type: string
+                      source:
+                        description: Source describes where to find the ResourceClaim.
+                        properties:
+                          resourceClaimName:
+                            description: |-
+                              ResourceClaimName is the name of a ResourceClaim object in the same
+                              namespace as this pod.
+                            type: string
+                          resourceClaimTemplateName:
+                            description: |-
+                              ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                              object in the same namespace as this pod.
+
+
+                              The template will be used to create a new ResourceClaim, which will
+                              be bound to this pod. When this pod is deleted, the ResourceClaim
+                              will also be deleted. The pod name and resource name, along with a
+                              generated component, will be used to form a unique name for the
+                              ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+
+
+                              This field is immutable and no changes will be made to the
+                              corresponding ResourceClaim by the control plane after creating the
+                              ResourceClaim.
+                            type: string
+                        type: object
+                    required:
+                    - name
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                  - name
+                  x-kubernetes-list-type: map
                 schedulerName:
                   description: |-
                     If specified, the VMI will be dispatched by specified scheduler.
@@ -18893,7 +19223,21 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any GPU devices associated with the instancetype.
           items:
             properties:
+              claim:
+                description: Claim is the name of the claim that is going to provision
+                  the DRA device
+                properties:
+                  name:
+                    description: |-
+                      Name must match the name of one entry in pod.spec.resourceClaims of
+                      the Pod where this field is used. It makes that resource available
+                      inside a container.
+                    type: string
+                required:
+                - name
+                type: object
               deviceName:
+                description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
                 description: Name of the GPU device as exposed by a device plugin
@@ -18925,7 +19269,6 @@ var CRDsValidation map[string]string = map[string]string{
                     type: object
                 type: object
             required:
-            - deviceName
             - name
             type: object
           type: array
@@ -18934,9 +19277,21 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any HostDevices associated with the instancetype.
           items:
             properties:
+              claim:
+                description: Claim is the name of the claim that is going to provision
+                  the DRA device
+                properties:
+                  name:
+                    description: |-
+                      Name must match the name of one entry in pod.spec.resourceClaims of
+                      the Pod where this field is used. It makes that resource available
+                      inside a container.
+                    type: string
+                required:
+                - name
+                type: object
               deviceName:
-                description: DeviceName is the resource name of the host device exposed
-                  by a device plugin
+                description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
                 type: string
@@ -18945,7 +19300,6 @@ var CRDsValidation map[string]string = map[string]string{
                   its tag will be provided to the guest via config drive
                 type: string
             required:
-            - deviceName
             - name
             type: object
           type: array
@@ -21433,7 +21787,22 @@ var CRDsValidation map[string]string = map[string]string{
                                     vmi.
                                   items:
                                     properties:
+                                      claim:
+                                        description: Claim is the name of the claim
+                                          that is going to provision the DRA device
+                                        properties:
+                                          name:
+                                            description: |-
+                                              Name must match the name of one entry in pod.spec.resourceClaims of
+                                              the Pod where this field is used. It makes that resource available
+                                              inside a container.
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
                                       deviceName:
+                                        description: DeviceName is the name of the
+                                          device provisioned by device-plugins
                                         type: string
                                       name:
                                         description: Name of the GPU device as exposed
@@ -21467,7 +21836,6 @@ var CRDsValidation map[string]string = map[string]string{
                                             type: object
                                         type: object
                                     required:
-                                    - deviceName
                                     - name
                                     type: object
                                   type: array
@@ -21477,9 +21845,22 @@ var CRDsValidation map[string]string = map[string]string{
                                     the vmi.
                                   items:
                                     properties:
+                                      claim:
+                                        description: Claim is the name of the claim
+                                          that is going to provision the DRA device
+                                        properties:
+                                          name:
+                                            description: |-
+                                              Name must match the name of one entry in pod.spec.resourceClaims of
+                                              the Pod where this field is used. It makes that resource available
+                                              inside a container.
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
                                       deviceName:
-                                        description: DeviceName is the resource name
-                                          of the host device exposed by a device plugin
+                                        description: DeviceName is the name of the
+                                          device provisioned by device-plugins
                                         type: string
                                       name:
                                         type: string
@@ -21489,7 +21870,6 @@ var CRDsValidation map[string]string = map[string]string{
                                           to the guest via config drive
                                         type: string
                                     required:
-                                    - deviceName
                                     - name
                                     type: object
                                   type: array
@@ -22567,6 +22947,64 @@ var CRDsValidation map[string]string = map[string]string{
                               format: int32
                               type: integer
                           type: object
+                        resourceClaims:
+                          description: |-
+                            ResourceClaims defines which ResourceClaims must be allocated
+                            and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources
+                            will be made available to the domain which consume them
+                            by name.
+
+
+                            This is an alpha field and requires enabling the
+                            DynamicResourceAllocation feature gate in kubernetes
+                             https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
+
+
+                            This field is immutable.
+                          items:
+                            description: |-
+                              PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                              It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
+                              Containers that need access to the ResourceClaim reference it with this name.
+                            properties:
+                              name:
+                                description: |-
+                                  Name uniquely identifies this resource claim inside the pod.
+                                  This must be a DNS_LABEL.
+                                type: string
+                              source:
+                                description: Source describes where to find the ResourceClaim.
+                                properties:
+                                  resourceClaimName:
+                                    description: |-
+                                      ResourceClaimName is the name of a ResourceClaim object in the same
+                                      namespace as this pod.
+                                    type: string
+                                  resourceClaimTemplateName:
+                                    description: |-
+                                      ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                                      object in the same namespace as this pod.
+
+
+                                      The template will be used to create a new ResourceClaim, which will
+                                      be bound to this pod. When this pod is deleted, the ResourceClaim
+                                      will also be deleted. The pod name and resource name, along with a
+                                      generated component, will be used to form a unique name for the
+                                      ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+
+
+                                      This field is immutable and no changes will be made to the
+                                      corresponding ResourceClaim by the control plane after creating the
+                                      ResourceClaim.
+                                    type: string
+                                type: object
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         schedulerName:
                           description: |-
                             If specified, the VMI will be dispatched by specified scheduler.
@@ -26616,7 +27054,23 @@ var CRDsValidation map[string]string = map[string]string{
                                         to the vmi.
                                       items:
                                         properties:
+                                          claim:
+                                            description: Claim is the name of the
+                                              claim that is going to provision the
+                                              DRA device
+                                            properties:
+                                              name:
+                                                description: |-
+                                                  Name must match the name of one entry in pod.spec.resourceClaims of
+                                                  the Pod where this field is used. It makes that resource available
+                                                  inside a container.
+                                                type: string
+                                            required:
+                                            - name
+                                            type: object
                                           deviceName:
+                                            description: DeviceName is the name of
+                                              the device provisioned by device-plugins
                                             type: string
                                           name:
                                             description: Name of the GPU device as
@@ -26651,7 +27105,6 @@ var CRDsValidation map[string]string = map[string]string{
                                                 type: object
                                             type: object
                                         required:
-                                        - deviceName
                                         - name
                                         type: object
                                       type: array
@@ -26661,10 +27114,23 @@ var CRDsValidation map[string]string = map[string]string{
                                         to the vmi.
                                       items:
                                         properties:
+                                          claim:
+                                            description: Claim is the name of the
+                                              claim that is going to provision the
+                                              DRA device
+                                            properties:
+                                              name:
+                                                description: |-
+                                                  Name must match the name of one entry in pod.spec.resourceClaims of
+                                                  the Pod where this field is used. It makes that resource available
+                                                  inside a container.
+                                                type: string
+                                            required:
+                                            - name
+                                            type: object
                                           deviceName:
-                                            description: DeviceName is the resource
-                                              name of the host device exposed by a
-                                              device plugin
+                                            description: DeviceName is the name of
+                                              the device provisioned by device-plugins
                                             type: string
                                           name:
                                             type: string
@@ -26675,7 +27141,6 @@ var CRDsValidation map[string]string = map[string]string{
                                               drive
                                             type: string
                                         required:
-                                        - deviceName
                                         - name
                                         type: object
                                       type: array
@@ -27758,6 +28223,65 @@ var CRDsValidation map[string]string = map[string]string{
                                   format: int32
                                   type: integer
                               type: object
+                            resourceClaims:
+                              description: |-
+                                ResourceClaims defines which ResourceClaims must be allocated
+                                and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources
+                                will be made available to the domain which consume them
+                                by name.
+
+
+                                This is an alpha field and requires enabling the
+                                DynamicResourceAllocation feature gate in kubernetes
+                                 https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
+
+
+                                This field is immutable.
+                              items:
+                                description: |-
+                                  PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                                  It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
+                                  Containers that need access to the ResourceClaim reference it with this name.
+                                properties:
+                                  name:
+                                    description: |-
+                                      Name uniquely identifies this resource claim inside the pod.
+                                      This must be a DNS_LABEL.
+                                    type: string
+                                  source:
+                                    description: Source describes where to find the
+                                      ResourceClaim.
+                                    properties:
+                                      resourceClaimName:
+                                        description: |-
+                                          ResourceClaimName is the name of a ResourceClaim object in the same
+                                          namespace as this pod.
+                                        type: string
+                                      resourceClaimTemplateName:
+                                        description: |-
+                                          ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                                          object in the same namespace as this pod.
+
+
+                                          The template will be used to create a new ResourceClaim, which will
+                                          be bound to this pod. When this pod is deleted, the ResourceClaim
+                                          will also be deleted. The pod name and resource name, along with a
+                                          generated component, will be used to form a unique name for the
+                                          ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+
+
+                                          This field is immutable and no changes will be made to the
+                                          corresponding ResourceClaim by the control plane after creating the
+                                          ResourceClaim.
+                                        type: string
+                                    type: object
+                                required:
+                                - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
                             schedulerName:
                               description: |-
                                 If specified, the VMI will be dispatched by specified scheduler.
