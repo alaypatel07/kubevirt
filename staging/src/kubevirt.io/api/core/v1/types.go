@@ -170,6 +170,21 @@ type VirtualMachineInstanceSpec struct {
 	AccessCredentials []AccessCredential `json:"accessCredentials,omitempty"`
 	// Specifies the architecture of the vm guest you are attempting to run. Defaults to the compiled architecture of the KubeVirt components
 	Architecture string `json:"architecture,omitempty"`
+	// ResourceClaims defines which ResourceClaims must be allocated
+	// and reserved before the VMI and hence virt-launcher pod is allowed to start. The resources
+	// will be made available to the domain which consume them
+	// by name.
+	//
+	// This is an alpha field and requires enabling the
+	// DynamicResourceAllocation feature gate in kubernetes
+	//  https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
+	//
+	// This field is immutable.
+	//
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	ResourceClaims []k8sv1.PodResourceClaim `json:"resourceClaims,omitempty"`
 }
 
 func (vmiSpec *VirtualMachineInstanceSpec) UnmarshalJSON(data []byte) error {
@@ -299,7 +314,14 @@ type VirtualMachineInstanceStatus struct {
 	// +listType=atomic
 	// +optional
 	MigratedVolumes []StorageMigratedVolumeInfo `json:"migratedVolumes,omitempty"`
+	// Status of resource claims.
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	ResourceClaimStatuses []VitualMachineInstanceResourceClaimStatus `json:"resourceClaimStatuses,omitempty"`
 }
+
+type VitualMachineInstanceResourceClaimStatus k8sv1.PodResourceClaimStatus
 
 // StorageMigratedVolumeInfo tracks the information about the source and destination volumes during the volume migration
 type StorageMigratedVolumeInfo struct {
