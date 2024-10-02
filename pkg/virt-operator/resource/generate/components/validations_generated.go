@@ -6173,6 +6173,12 @@ var CRDsValidation map[string]string = map[string]string{
                                       the Pod where this field is used. It makes that resource available
                                       inside a container.
                                     type: string
+                                  request:
+                                    description: |-
+                                      Request is the name chosen for a request in the referenced claim.
+                                      If empty, everything from the claim is made available, otherwise
+                                      only the result of this request.
+                                    type: string
                                 required:
                                 - name
                                 type: object
@@ -6229,6 +6235,12 @@ var CRDsValidation map[string]string = map[string]string{
                                       Name must match the name of one entry in pod.spec.resourceClaims of
                                       the Pod where this field is used. It makes that resource available
                                       inside a container.
+                                    type: string
+                                  request:
+                                    description: |-
+                                      Request is the name chosen for a request in the referenced claim.
+                                      If empty, everything from the claim is made available, otherwise
+                                      only the result of this request.
                                     type: string
                                 required:
                                 - name
@@ -7319,16 +7331,17 @@ var CRDsValidation map[string]string = map[string]string{
                     will be made available to the domain which consume them
                     by name.
 
-
                     This is an alpha field and requires enabling the
                     DynamicResourceAllocation feature gate in kubernetes
                      https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
 
-
                     This field is immutable.
                   items:
                     description: |-
-                      PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                      PodResourceClaim references exactly one ResourceClaim, either directly
+                      or by naming a ResourceClaimTemplate which is then turned into a ResourceClaim
+                      for the pod.
+
                       It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
                       Containers that need access to the ResourceClaim reference it with this name.
                     properties:
@@ -7337,32 +7350,32 @@ var CRDsValidation map[string]string = map[string]string{
                           Name uniquely identifies this resource claim inside the pod.
                           This must be a DNS_LABEL.
                         type: string
-                      source:
-                        description: Source describes where to find the ResourceClaim.
-                        properties:
-                          resourceClaimName:
-                            description: |-
-                              ResourceClaimName is the name of a ResourceClaim object in the same
-                              namespace as this pod.
-                            type: string
-                          resourceClaimTemplateName:
-                            description: |-
-                              ResourceClaimTemplateName is the name of a ResourceClaimTemplate
-                              object in the same namespace as this pod.
+                      resourceClaimName:
+                        description: |-
+                          ResourceClaimName is the name of a ResourceClaim object in the same
+                          namespace as this pod.
 
+                          Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                          be set.
+                        type: string
+                      resourceClaimTemplateName:
+                        description: |-
+                          ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                          object in the same namespace as this pod.
 
-                              The template will be used to create a new ResourceClaim, which will
-                              be bound to this pod. When this pod is deleted, the ResourceClaim
-                              will also be deleted. The pod name and resource name, along with a
-                              generated component, will be used to form a unique name for the
-                              ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+                          The template will be used to create a new ResourceClaim, which will
+                          be bound to this pod. When this pod is deleted, the ResourceClaim
+                          will also be deleted. The pod name and resource name, along with a
+                          generated component, will be used to form a unique name for the
+                          ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
 
+                          This field is immutable and no changes will be made to the
+                          corresponding ResourceClaim by the control plane after creating the
+                          ResourceClaim.
 
-                              This field is immutable and no changes will be made to the
-                              corresponding ResourceClaim by the control plane after creating the
-                              ResourceClaim.
-                            type: string
-                        type: object
+                          Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                          be set.
+                        type: string
                     required:
                     - name
                     type: object
@@ -7637,7 +7650,6 @@ var CRDsValidation map[string]string = map[string]string{
                               that contains config drive networkdata.
                             properties:
                               name:
-                                default: ""
                                 description: |-
                                   Name of the referent.
                                   This field is effectively required, but due to backwards compatibility is
@@ -8888,6 +8900,12 @@ var CRDsValidation map[string]string = map[string]string{
                       the Pod where this field is used. It makes that resource available
                       inside a container.
                     type: string
+                  request:
+                    description: |-
+                      Request is the name chosen for a request in the referenced claim.
+                      If empty, everything from the claim is made available, otherwise
+                      only the result of this request.
+                    type: string
                 required:
                 - name
                 type: object
@@ -8941,6 +8959,12 @@ var CRDsValidation map[string]string = map[string]string{
                       Name must match the name of one entry in pod.spec.resourceClaims of
                       the Pod where this field is used. It makes that resource available
                       inside a container.
+                    type: string
+                  request:
+                    description: |-
+                      Request is the name chosen for a request in the referenced claim.
+                      If empty, everything from the claim is made available, otherwise
+                      only the result of this request.
                     type: string
                 required:
                 - name
@@ -11503,6 +11527,12 @@ var CRDsValidation map[string]string = map[string]string{
                               the Pod where this field is used. It makes that resource available
                               inside a container.
                             type: string
+                          request:
+                            description: |-
+                              Request is the name chosen for a request in the referenced claim.
+                              If empty, everything from the claim is made available, otherwise
+                              only the result of this request.
+                            type: string
                         required:
                         - name
                         type: object
@@ -11558,6 +11588,12 @@ var CRDsValidation map[string]string = map[string]string{
                               Name must match the name of one entry in pod.spec.resourceClaims of
                               the Pod where this field is used. It makes that resource available
                               inside a container.
+                            type: string
+                          request:
+                            description: |-
+                              Request is the name chosen for a request in the referenced claim.
+                              If empty, everything from the claim is made available, otherwise
+                              only the result of this request.
                             type: string
                         required:
                         - name
@@ -12637,16 +12673,17 @@ var CRDsValidation map[string]string = map[string]string{
             will be made available to the domain which consume them
             by name.
 
-
             This is an alpha field and requires enabling the
             DynamicResourceAllocation feature gate in kubernetes
              https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
 
-
             This field is immutable.
           items:
             description: |-
-              PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+              PodResourceClaim references exactly one ResourceClaim, either directly
+              or by naming a ResourceClaimTemplate which is then turned into a ResourceClaim
+              for the pod.
+
               It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
               Containers that need access to the ResourceClaim reference it with this name.
             properties:
@@ -12655,32 +12692,32 @@ var CRDsValidation map[string]string = map[string]string{
                   Name uniquely identifies this resource claim inside the pod.
                   This must be a DNS_LABEL.
                 type: string
-              source:
-                description: Source describes where to find the ResourceClaim.
-                properties:
-                  resourceClaimName:
-                    description: |-
-                      ResourceClaimName is the name of a ResourceClaim object in the same
-                      namespace as this pod.
-                    type: string
-                  resourceClaimTemplateName:
-                    description: |-
-                      ResourceClaimTemplateName is the name of a ResourceClaimTemplate
-                      object in the same namespace as this pod.
+              resourceClaimName:
+                description: |-
+                  ResourceClaimName is the name of a ResourceClaim object in the same
+                  namespace as this pod.
 
+                  Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                  be set.
+                type: string
+              resourceClaimTemplateName:
+                description: |-
+                  ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                  object in the same namespace as this pod.
 
-                      The template will be used to create a new ResourceClaim, which will
-                      be bound to this pod. When this pod is deleted, the ResourceClaim
-                      will also be deleted. The pod name and resource name, along with a
-                      generated component, will be used to form a unique name for the
-                      ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+                  The template will be used to create a new ResourceClaim, which will
+                  be bound to this pod. When this pod is deleted, the ResourceClaim
+                  will also be deleted. The pod name and resource name, along with a
+                  generated component, will be used to form a unique name for the
+                  ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
 
+                  This field is immutable and no changes will be made to the
+                  corresponding ResourceClaim by the control plane after creating the
+                  ResourceClaim.
 
-                      This field is immutable and no changes will be made to the
-                      corresponding ResourceClaim by the control plane after creating the
-                      ResourceClaim.
-                    type: string
-                type: object
+                  Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                  be set.
+                type: string
             required:
             - name
             type: object
@@ -13945,7 +13982,7 @@ var CRDsValidation map[string]string = map[string]string{
               resourceClaimName:
                 description: |-
                   ResourceClaimName is the name of the ResourceClaim that was
-                  generated for the Pod in the namespace of the Pod. It this is
+                  generated for the Pod in the namespace of the Pod. If this is
                   unset, then generating a ResourceClaim was not necessary. The
                   pod.spec.resourceClaims entry can be ignored in this case.
                 type: string
@@ -14815,6 +14852,12 @@ var CRDsValidation map[string]string = map[string]string{
                               the Pod where this field is used. It makes that resource available
                               inside a container.
                             type: string
+                          request:
+                            description: |-
+                              Request is the name chosen for a request in the referenced claim.
+                              If empty, everything from the claim is made available, otherwise
+                              only the result of this request.
+                            type: string
                         required:
                         - name
                         type: object
@@ -14870,6 +14913,12 @@ var CRDsValidation map[string]string = map[string]string{
                               Name must match the name of one entry in pod.spec.resourceClaims of
                               the Pod where this field is used. It makes that resource available
                               inside a container.
+                            type: string
+                          request:
+                            description: |-
+                              Request is the name chosen for a request in the referenced claim.
+                              If empty, everything from the claim is made available, otherwise
+                              only the result of this request.
                             type: string
                         required:
                         - name
@@ -17253,6 +17302,12 @@ var CRDsValidation map[string]string = map[string]string{
                                       the Pod where this field is used. It makes that resource available
                                       inside a container.
                                     type: string
+                                  request:
+                                    description: |-
+                                      Request is the name chosen for a request in the referenced claim.
+                                      If empty, everything from the claim is made available, otherwise
+                                      only the result of this request.
+                                    type: string
                                 required:
                                 - name
                                 type: object
@@ -17309,6 +17364,12 @@ var CRDsValidation map[string]string = map[string]string{
                                       Name must match the name of one entry in pod.spec.resourceClaims of
                                       the Pod where this field is used. It makes that resource available
                                       inside a container.
+                                    type: string
+                                  request:
+                                    description: |-
+                                      Request is the name chosen for a request in the referenced claim.
+                                      If empty, everything from the claim is made available, otherwise
+                                      only the result of this request.
                                     type: string
                                 required:
                                 - name
@@ -18399,16 +18460,17 @@ var CRDsValidation map[string]string = map[string]string{
                     will be made available to the domain which consume them
                     by name.
 
-
                     This is an alpha field and requires enabling the
                     DynamicResourceAllocation feature gate in kubernetes
                      https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
 
-
                     This field is immutable.
                   items:
                     description: |-
-                      PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                      PodResourceClaim references exactly one ResourceClaim, either directly
+                      or by naming a ResourceClaimTemplate which is then turned into a ResourceClaim
+                      for the pod.
+
                       It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
                       Containers that need access to the ResourceClaim reference it with this name.
                     properties:
@@ -18417,32 +18479,32 @@ var CRDsValidation map[string]string = map[string]string{
                           Name uniquely identifies this resource claim inside the pod.
                           This must be a DNS_LABEL.
                         type: string
-                      source:
-                        description: Source describes where to find the ResourceClaim.
-                        properties:
-                          resourceClaimName:
-                            description: |-
-                              ResourceClaimName is the name of a ResourceClaim object in the same
-                              namespace as this pod.
-                            type: string
-                          resourceClaimTemplateName:
-                            description: |-
-                              ResourceClaimTemplateName is the name of a ResourceClaimTemplate
-                              object in the same namespace as this pod.
+                      resourceClaimName:
+                        description: |-
+                          ResourceClaimName is the name of a ResourceClaim object in the same
+                          namespace as this pod.
 
+                          Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                          be set.
+                        type: string
+                      resourceClaimTemplateName:
+                        description: |-
+                          ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                          object in the same namespace as this pod.
 
-                              The template will be used to create a new ResourceClaim, which will
-                              be bound to this pod. When this pod is deleted, the ResourceClaim
-                              will also be deleted. The pod name and resource name, along with a
-                              generated component, will be used to form a unique name for the
-                              ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+                          The template will be used to create a new ResourceClaim, which will
+                          be bound to this pod. When this pod is deleted, the ResourceClaim
+                          will also be deleted. The pod name and resource name, along with a
+                          generated component, will be used to form a unique name for the
+                          ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
 
+                          This field is immutable and no changes will be made to the
+                          corresponding ResourceClaim by the control plane after creating the
+                          ResourceClaim.
 
-                              This field is immutable and no changes will be made to the
-                              corresponding ResourceClaim by the control plane after creating the
-                              ResourceClaim.
-                            type: string
-                        type: object
+                          Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                          be set.
+                        type: string
                     required:
                     - name
                     type: object
@@ -19306,6 +19368,12 @@ var CRDsValidation map[string]string = map[string]string{
                       the Pod where this field is used. It makes that resource available
                       inside a container.
                     type: string
+                  request:
+                    description: |-
+                      Request is the name chosen for a request in the referenced claim.
+                      If empty, everything from the claim is made available, otherwise
+                      only the result of this request.
+                    type: string
                 required:
                 - name
                 type: object
@@ -19359,6 +19427,12 @@ var CRDsValidation map[string]string = map[string]string{
                       Name must match the name of one entry in pod.spec.resourceClaims of
                       the Pod where this field is used. It makes that resource available
                       inside a container.
+                    type: string
+                  request:
+                    description: |-
+                      Request is the name chosen for a request in the referenced claim.
+                      If empty, everything from the claim is made available, otherwise
+                      only the result of this request.
                     type: string
                 required:
                 - name
@@ -20120,6 +20194,38 @@ var CRDsValidation map[string]string = map[string]string{
                                   Resources represents the minimum resources the volume should have.
                                   More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
                                 properties:
+                                  claims:
+                                    description: |-
+                                      Claims lists the names of resources, defined in spec.resourceClaims,
+                                      that are used by this container.
+
+                                      This is an alpha field and requires enabling the
+                                      DynamicResourceAllocation feature gate.
+
+                                      This field is immutable. It can only be set for containers.
+                                    items:
+                                      description: ResourceClaim references one entry
+                                        in PodSpec.ResourceClaims.
+                                      properties:
+                                        name:
+                                          description: |-
+                                            Name must match the name of one entry in pod.spec.resourceClaims of
+                                            the Pod where this field is used. It makes that resource available
+                                            inside a container.
+                                          type: string
+                                        request:
+                                          description: |-
+                                            Request is the name chosen for a request in the referenced claim.
+                                            If empty, everything from the claim is made available, otherwise
+                                            only the result of this request.
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                    type: array
+                                    x-kubernetes-list-map-keys:
+                                    - name
+                                    x-kubernetes-list-type: map
                                   limits:
                                     additionalProperties:
                                       anyOf:
@@ -21840,6 +21946,12 @@ var CRDsValidation map[string]string = map[string]string{
                                               the Pod where this field is used. It makes that resource available
                                               inside a container.
                                             type: string
+                                          request:
+                                            description: |-
+                                              Request is the name chosen for a request in the referenced claim.
+                                              If empty, everything from the claim is made available, otherwise
+                                              only the result of this request.
+                                            type: string
                                         required:
                                         - name
                                         type: object
@@ -21897,6 +22009,12 @@ var CRDsValidation map[string]string = map[string]string{
                                               Name must match the name of one entry in pod.spec.resourceClaims of
                                               the Pod where this field is used. It makes that resource available
                                               inside a container.
+                                            type: string
+                                          request:
+                                            description: |-
+                                              Request is the name chosen for a request in the referenced claim.
+                                              If empty, everything from the claim is made available, otherwise
+                                              only the result of this request.
                                             type: string
                                         required:
                                         - name
@@ -23004,16 +23122,17 @@ var CRDsValidation map[string]string = map[string]string{
                             will be made available to the domain which consume them
                             by name.
 
-
                             This is an alpha field and requires enabling the
                             DynamicResourceAllocation feature gate in kubernetes
                              https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
 
-
                             This field is immutable.
                           items:
                             description: |-
-                              PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                              PodResourceClaim references exactly one ResourceClaim, either directly
+                              or by naming a ResourceClaimTemplate which is then turned into a ResourceClaim
+                              for the pod.
+
                               It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
                               Containers that need access to the ResourceClaim reference it with this name.
                             properties:
@@ -23022,32 +23141,32 @@ var CRDsValidation map[string]string = map[string]string{
                                   Name uniquely identifies this resource claim inside the pod.
                                   This must be a DNS_LABEL.
                                 type: string
-                              source:
-                                description: Source describes where to find the ResourceClaim.
-                                properties:
-                                  resourceClaimName:
-                                    description: |-
-                                      ResourceClaimName is the name of a ResourceClaim object in the same
-                                      namespace as this pod.
-                                    type: string
-                                  resourceClaimTemplateName:
-                                    description: |-
-                                      ResourceClaimTemplateName is the name of a ResourceClaimTemplate
-                                      object in the same namespace as this pod.
+                              resourceClaimName:
+                                description: |-
+                                  ResourceClaimName is the name of a ResourceClaim object in the same
+                                  namespace as this pod.
 
+                                  Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                                  be set.
+                                type: string
+                              resourceClaimTemplateName:
+                                description: |-
+                                  ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                                  object in the same namespace as this pod.
 
-                                      The template will be used to create a new ResourceClaim, which will
-                                      be bound to this pod. When this pod is deleted, the ResourceClaim
-                                      will also be deleted. The pod name and resource name, along with a
-                                      generated component, will be used to form a unique name for the
-                                      ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+                                  The template will be used to create a new ResourceClaim, which will
+                                  be bound to this pod. When this pod is deleted, the ResourceClaim
+                                  will also be deleted. The pod name and resource name, along with a
+                                  generated component, will be used to form a unique name for the
+                                  ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
 
+                                  This field is immutable and no changes will be made to the
+                                  corresponding ResourceClaim by the control plane after creating the
+                                  ResourceClaim.
 
-                                      This field is immutable and no changes will be made to the
-                                      corresponding ResourceClaim by the control plane after creating the
-                                      ResourceClaim.
-                                    type: string
-                                type: object
+                                  Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                                  be set.
+                                type: string
                             required:
                             - name
                             type: object
@@ -25366,6 +25485,38 @@ var CRDsValidation map[string]string = map[string]string{
                                       Resources represents the minimum resources the volume should have.
                                       More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
                                     properties:
+                                      claims:
+                                        description: |-
+                                          Claims lists the names of resources, defined in spec.resourceClaims,
+                                          that are used by this container.
+
+                                          This is an alpha field and requires enabling the
+                                          DynamicResourceAllocation feature gate.
+
+                                          This field is immutable. It can only be set for containers.
+                                        items:
+                                          description: ResourceClaim references one
+                                            entry in PodSpec.ResourceClaims.
+                                          properties:
+                                            name:
+                                              description: |-
+                                                Name must match the name of one entry in pod.spec.resourceClaims of
+                                                the Pod where this field is used. It makes that resource available
+                                                inside a container.
+                                              type: string
+                                            request:
+                                              description: |-
+                                                Request is the name chosen for a request in the referenced claim.
+                                                If empty, everything from the claim is made available, otherwise
+                                                only the result of this request.
+                                              type: string
+                                          required:
+                                          - name
+                                          type: object
+                                        type: array
+                                        x-kubernetes-list-map-keys:
+                                        - name
+                                        x-kubernetes-list-type: map
                                       limits:
                                         additionalProperties:
                                           anyOf:
@@ -27108,6 +27259,12 @@ var CRDsValidation map[string]string = map[string]string{
                                                   the Pod where this field is used. It makes that resource available
                                                   inside a container.
                                                 type: string
+                                              request:
+                                                description: |-
+                                                  Request is the name chosen for a request in the referenced claim.
+                                                  If empty, everything from the claim is made available, otherwise
+                                                  only the result of this request.
+                                                type: string
                                             required:
                                             - name
                                             type: object
@@ -27167,6 +27324,12 @@ var CRDsValidation map[string]string = map[string]string{
                                                   Name must match the name of one entry in pod.spec.resourceClaims of
                                                   the Pod where this field is used. It makes that resource available
                                                   inside a container.
+                                                type: string
+                                              request:
+                                                description: |-
+                                                  Request is the name chosen for a request in the referenced claim.
+                                                  If empty, everything from the claim is made available, otherwise
+                                                  only the result of this request.
                                                 type: string
                                             required:
                                             - name
@@ -28280,16 +28443,17 @@ var CRDsValidation map[string]string = map[string]string{
                                 will be made available to the domain which consume them
                                 by name.
 
-
                                 This is an alpha field and requires enabling the
                                 DynamicResourceAllocation feature gate in kubernetes
                                  https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/
 
-
                                 This field is immutable.
                               items:
                                 description: |-
-                                  PodResourceClaim references exactly one ResourceClaim through a ClaimSource.
+                                  PodResourceClaim references exactly one ResourceClaim, either directly
+                                  or by naming a ResourceClaimTemplate which is then turned into a ResourceClaim
+                                  for the pod.
+
                                   It adds a name to it that uniquely identifies the ResourceClaim inside the Pod.
                                   Containers that need access to the ResourceClaim reference it with this name.
                                 properties:
@@ -28298,33 +28462,32 @@ var CRDsValidation map[string]string = map[string]string{
                                       Name uniquely identifies this resource claim inside the pod.
                                       This must be a DNS_LABEL.
                                     type: string
-                                  source:
-                                    description: Source describes where to find the
+                                  resourceClaimName:
+                                    description: |-
+                                      ResourceClaimName is the name of a ResourceClaim object in the same
+                                      namespace as this pod.
+
+                                      Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                                      be set.
+                                    type: string
+                                  resourceClaimTemplateName:
+                                    description: |-
+                                      ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+                                      object in the same namespace as this pod.
+
+                                      The template will be used to create a new ResourceClaim, which will
+                                      be bound to this pod. When this pod is deleted, the ResourceClaim
+                                      will also be deleted. The pod name and resource name, along with a
+                                      generated component, will be used to form a unique name for the
+                                      ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+
+                                      This field is immutable and no changes will be made to the
+                                      corresponding ResourceClaim by the control plane after creating the
                                       ResourceClaim.
-                                    properties:
-                                      resourceClaimName:
-                                        description: |-
-                                          ResourceClaimName is the name of a ResourceClaim object in the same
-                                          namespace as this pod.
-                                        type: string
-                                      resourceClaimTemplateName:
-                                        description: |-
-                                          ResourceClaimTemplateName is the name of a ResourceClaimTemplate
-                                          object in the same namespace as this pod.
 
-
-                                          The template will be used to create a new ResourceClaim, which will
-                                          be bound to this pod. When this pod is deleted, the ResourceClaim
-                                          will also be deleted. The pod name and resource name, along with a
-                                          generated component, will be used to form a unique name for the
-                                          ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
-
-
-                                          This field is immutable and no changes will be made to the
-                                          corresponding ResourceClaim by the control plane after creating the
-                                          ResourceClaim.
-                                        type: string
-                                    type: object
+                                      Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+                                      be set.
+                                    type: string
                                 required:
                                 - name
                                 type: object
