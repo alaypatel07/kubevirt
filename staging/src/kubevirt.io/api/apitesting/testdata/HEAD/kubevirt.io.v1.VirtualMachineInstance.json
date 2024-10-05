@@ -1085,11 +1085,41 @@
         }
       }
     ],
-    "resourceClaimStatuses": [
-      {
-        "name": "nameValue",
-        "resourceClaimName": "resourceClaimNameValue"
-      }
-    ]
+    "deviceStatus": {
+      "gpuStatuses": [
+        {
+          "name": "nameValue",
+          "deviceResourceClaimStatus": {
+            "resourceClaimName": "resourceClaimNameValue",
+            "deviceName": "deviceNameValue",
+            "deviceAttributes": {
+              "deviceAttributesKey": {
+                "int": -3,
+                "bool": true,
+                "string": "stringValue",
+                "version": "versionValue"
+              }
+            }
+          }
+        }
+      ],
+      "hostDeviceStatuses": [
+        {
+          "name": "nameValue",
+          "deviceResourceClaimStatus": {
+            "resourceClaimName": "resourceClaimNameValue",
+            "deviceName": "deviceNameValue",
+            "deviceAttributes": {
+              "deviceAttributesKey": {
+                "int": -3,
+                "bool": true,
+                "string": "stringValue",
+                "version": "versionValue"
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }

@@ -602,6 +602,29 @@ status:
     cores: 4294967291
     sockets: 4294967289
     threads: 4294967289
+  deviceStatus:
+    gpuStatuses:
+    - deviceResourceClaimStatus:
+        deviceAttributes:
+          deviceAttributesKey:
+            bool: true
+            int: -3
+            string: stringValue
+            version: versionValue
+        deviceName: deviceNameValue
+        resourceClaimName: resourceClaimNameValue
+      name: nameValue
+    hostDeviceStatuses:
+    - deviceResourceClaimStatus:
+        deviceAttributes:
+          deviceAttributesKey:
+            bool: true
+            int: -3
+            string: stringValue
+            version: versionValue
+        deviceName: deviceNameValue
+        resourceClaimName: resourceClaimNameValue
+      name: nameValue
   evacuationNodeName: evacuationNodeNameValue
   fsFreezeStatus: fsFreezeStatusValue
   guestOSInfo:
@@ -709,9 +732,6 @@ status:
     phaseTransitionTimestamp: "1976-01-01T01:01:01Z"
   qosClass: qosClassValue
   reason: reasonValue
-  resourceClaimStatuses:
-  - name: nameValue
-    resourceClaimName: resourceClaimNameValue
   runtimeUser: 18446744073709551605
   selinuxContext: selinuxContextValue
   topologyHints:

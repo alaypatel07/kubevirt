@@ -314,14 +314,75 @@ type VirtualMachineInstanceStatus struct {
 	// +listType=atomic
 	// +optional
 	MigratedVolumes []StorageMigratedVolumeInfo `json:"migratedVolumes,omitempty"`
-	// Status of resource claims.
-	// +listType=map
-	// +listMapKey=name
+	// DeviceStatus reflects the state of devices requested in spec.domain.devices. This is an optional field available
+	// only when DRA feature gate is enabled
 	// +optional
-	ResourceClaimStatuses []VitualMachineInstanceResourceClaimStatus `json:"resourceClaimStatuses,omitempty"`
+	DeviceStatus *DeviceStatus `json:"deviceStatus,omitempty"`
 }
 
-type VitualMachineInstanceResourceClaimStatus k8sv1.PodResourceClaimStatus
+// DeviceStatus has the information of all devices allocated spec.domain.devices
+// +k8s:openapi-gen=true
+type DeviceStatus struct {
+	// GPUStatuses reflects the state of GPUs requested in spec.domain.devices.gpus
+	// +listType=atomic
+	// +optional
+	GPUStatuses []DeviceStatusInfo `json:"gpuStatuses,omitempty"`
+	// HostDeviceStatuses reflects the state of GPUs requested in spec.domain.devices.hostDevices
+	// DRA
+	// +listType=atomic
+	// +optional
+	HostDeviceStatuses []DeviceStatusInfo `json:"hostDeviceStatuses,omitempty"`
+}
+
+type DeviceStatusInfo struct {
+	// Name of the device as specified in spec.domain.devices.gpus.name or spec.domain.devices.hostDevices.name
+	Name string `json:"name"`
+	// DeviceResourceClaimStatus reflects the DRA related information for the degive
+	DeviceResourceClaimStatus *DeviceResourceClaimStatus `json:"deviceResourceClaimStatus,omitempty"`
+}
+
+// DeviceResourceClaimStatus has to be before SyncVMI call from virt-handler to virt-launcher
+type DeviceResourceClaimStatus struct {
+	// ResourceClaimName is the name of the resource claims object used to provision this resource
+	// +optional
+	ResourceClaimName *string `json:"resourceClaimName,omitempty"`
+	// DeviceName is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status
+	// +optional
+	DeviceName *string `json:"deviceName,omitempty"`
+	// DeviceAttributes are the attributes published by the driver running on the node in
+	// resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName
+	// and resourceclaim.spec.devices.requests.deviceClassName.
+	// +optional
+	DeviceAttributes map[string]DeviceAttribute `json:"deviceAttributes,omitempty"`
+}
+
+// DeviceAttribute must have exactly one field set.
+type DeviceAttribute struct {
+	// The Go field names below have a Value suffix to avoid a conflict between the
+	// field "String" and the corresponding method. That method is required.
+	// The Kubernetes API is defined without that suffix to keep it more natural.
+
+	// Int is a number.
+	//
+	// +optional
+	Int *int64 `json:"int,omitempty"`
+
+	// Bool is a true/false value.
+	//
+	// +optional
+	Bool *bool `json:"bool,omitempty"`
+
+	// String is a string. Must not be longer than 64 characters.
+	//
+	// +optional
+	String *string `json:"string,omitempty"`
+
+	// Version is a semantic version according to semver.org spec 2.0.0.
+	// Must not be longer than 64 characters.
+	//
+	// +optional
+	Version *string `json:"version,omitempty"`
+}
 
 // StorageMigratedVolumeInfo tracks the information about the source and destination volumes during the volume migration
 type StorageMigratedVolumeInfo struct {
