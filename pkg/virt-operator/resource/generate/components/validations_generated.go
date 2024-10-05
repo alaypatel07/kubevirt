@@ -13553,6 +13553,120 @@ var CRDsValidation map[string]string = map[string]string{
               format: int32
               type: integer
           type: object
+        deviceStatus:
+          description: |-
+            DeviceStatus reflects the state of devices requested in spec.domain.devices. This is an optional field available
+            only when DRA feature gate is enabled
+          properties:
+            gpuStatuses:
+              description: GPUStatuses reflects the state of GPUs requested in spec.domain.devices.gpus
+              items:
+                properties:
+                  deviceResourceClaimStatus:
+                    description: DeviceResourceClaimStatus reflects the DRA related
+                      information for the degive
+                    properties:
+                      deviceAttributes:
+                        additionalProperties:
+                          description: DeviceAttribute must have exactly one field
+                            set.
+                          properties:
+                            bool:
+                              description: Bool is a true/false value.
+                              type: boolean
+                            int:
+                              description: Int is a number.
+                              format: int64
+                              type: integer
+                            string:
+                              description: String is a string. Must not be longer
+                                than 64 characters.
+                              type: string
+                            version:
+                              description: |-
+                                Version is a semantic version according to semver.org spec 2.0.0.
+                                Must not be longer than 64 characters.
+                              type: string
+                          type: object
+                        description: |-
+                          DeviceAttributes are the attributes published by the driver running on the node in
+                          resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName
+                          and resourceclaim.spec.devices.requests.deviceClassName.
+                        type: object
+                      deviceName:
+                        description: DeviceName is the name of actual device on the
+                          host provisioned by the driver as reflected in resourceclaim.status
+                        type: string
+                      resourceClaimName:
+                        description: ResourceClaimName is the name of the resource
+                          claims object used to provision this resource
+                        type: string
+                    type: object
+                  name:
+                    description: Name of the device as specified in spec.domain.devices.gpus.name
+                      or spec.domain.devices.hostDevices.name
+                    type: string
+                required:
+                - name
+                type: object
+              type: array
+              x-kubernetes-list-type: atomic
+            hostDeviceStatuses:
+              description: |-
+                HostDeviceStatuses reflects the state of GPUs requested in spec.domain.devices.hostDevices
+                DRA
+              items:
+                properties:
+                  deviceResourceClaimStatus:
+                    description: DeviceResourceClaimStatus reflects the DRA related
+                      information for the degive
+                    properties:
+                      deviceAttributes:
+                        additionalProperties:
+                          description: DeviceAttribute must have exactly one field
+                            set.
+                          properties:
+                            bool:
+                              description: Bool is a true/false value.
+                              type: boolean
+                            int:
+                              description: Int is a number.
+                              format: int64
+                              type: integer
+                            string:
+                              description: String is a string. Must not be longer
+                                than 64 characters.
+                              type: string
+                            version:
+                              description: |-
+                                Version is a semantic version according to semver.org spec 2.0.0.
+                                Must not be longer than 64 characters.
+                              type: string
+                          type: object
+                        description: |-
+                          DeviceAttributes are the attributes published by the driver running on the node in
+                          resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName
+                          and resourceclaim.spec.devices.requests.deviceClassName.
+                        type: object
+                      deviceName:
+                        description: DeviceName is the name of actual device on the
+                          host provisioned by the driver as reflected in resourceclaim.status
+                        type: string
+                      resourceClaimName:
+                        description: ResourceClaimName is the name of the resource
+                          claims object used to provision this resource
+                        type: string
+                    type: object
+                  name:
+                    description: Name of the device as specified in spec.domain.devices.gpus.name
+                      or spec.domain.devices.hostDevices.name
+                    type: string
+                required:
+                - name
+                type: object
+              type: array
+              x-kubernetes-list-type: atomic
+          type: object
         evacuationNodeName:
           description: |-
             EvacuationNodeName is used to track the eviction process of a VMI. It stores the name of the node that we want
@@ -14034,34 +14148,6 @@ var CRDsValidation map[string]string = map[string]string{
           description: A brief CamelCase message indicating details about why the
             VMI is in this state. e.g. 'NodeUnresponsive'
           type: string
-        resourceClaimStatuses:
-          description: Status of resource claims.
-          items:
-            description: |-
-              PodResourceClaimStatus is stored in the PodStatus for each PodResourceClaim
-              which references a ResourceClaimTemplate. It stores the generated name for
-              the corresponding ResourceClaim.
-            properties:
-              name:
-                description: |-
-                  Name uniquely identifies this resource claim inside the pod.
-                  This must match the name of an entry in pod.spec.resourceClaims,
-                  which implies that the string must be a DNS_LABEL.
-                type: string
-              resourceClaimName:
-                description: |-
-                  ResourceClaimName is the name of the ResourceClaim that was
-                  generated for the Pod in the namespace of the Pod. If this is
-                  unset, then generating a ResourceClaim was not necessary. The
-                  pod.spec.resourceClaims entry can be ignored in this case.
-                type: string
-            required:
-            - name
-            type: object
-          type: array
-          x-kubernetes-list-map-keys:
-          - name
-          x-kubernetes-list-type: map
         runtimeUser:
           description: RuntimeUser is used to determine what user will be used in
             launcher
