@@ -551,6 +551,20 @@ func newControllerClusterRole() *rbacv1.ClusterRole {
 					"watch",
 				},
 			},
+			{
+				APIGroups: []string{
+					"resource.k8s.io",
+				},
+				Resources: []string{
+					"resourceslices",
+					"resourceclaims",
+				},
+				Verbs: []string{
+					"list",
+					"watch",
+					"get",
+				},
+			},
 		},
 	}
 }
