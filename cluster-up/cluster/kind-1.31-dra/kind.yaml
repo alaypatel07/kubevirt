@@ -1,7 +1,7 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 featureGates:
-    DynamicResourceAllocation: true
+  DynamicResourceAllocation: true
 containerdConfigPatches:
   - |-
     [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry:5000"]
@@ -36,7 +36,12 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             v: "1"
-    extraMounts:
-      - containerPath: /var/log/audit
-        hostPath: /var/log/audit
-        readOnly: true
+  - role: worker
+    labels:
+      node-role.x-k8s.io/worker: ""
+    kubeadmConfigPatches:
+      - |-
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            v: "1"
