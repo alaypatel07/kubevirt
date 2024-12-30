@@ -45,3 +45,28 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             v: "1"
+    extraMounts:
+    - hostPath: /nvml
+      containerPath: /nvml
+    - hostPath: /bin/nvidia-smi
+      containerPath: /bin/nvidia-smi
+    - hostPath: /usr/bin/nvidia-set-vf-bar1size
+      containerPath: /usr/bin/nvidia-set-vf-bar1size
+    - hostPath: /usr/lib/nvidia/sriov-manage
+      containerPath: /usr/lib/nvidia/sriov-manage
+      readOnly: false
+    - hostPath: /sys/devices
+      containerPath: /sys/devices
+      readOnly: false
+    - hostPath: /sys/bus
+      containerPath: /sys/bus
+      readOnly: false
+    - hostPath: /sys/module
+      containerPath: /sys/module
+      readOnly: false
+    - hostPath: /sys/kernel
+      containerPath: /sys/kernel
+      readOnly: false
+    - hostPath: /dev/vfio
+      containerPath: /dev/vfio
+      readOnly: false
