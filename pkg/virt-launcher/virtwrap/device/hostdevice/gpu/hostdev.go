@@ -108,6 +108,9 @@ func getDRAMDEVHostDevices(vmi *v1.VirtualMachineInstance, defaultDisplayOn bool
 	if vmi.Status.DeviceStatus != nil {
 		for _, gpu := range vmi.Status.DeviceStatus.GPUStatuses {
 			if gpu.DeviceResourceClaimStatus != nil {
+				if _, ok := gpu.DeviceResourceClaimStatus.DeviceAttributes["pciAddress"]; ok {
+					continue
+				}
 				if uuid, ok := gpu.DeviceResourceClaimStatus.DeviceAttributes["uuid"]; ok {
 					hostDevice := api.HostDevice{
 						Alias: api.NewUserDefinedAlias(AliasPrefix + gpu.Name),
@@ -132,6 +135,7 @@ func getDRAMDEVHostDevices(vmi *v1.VirtualMachineInstance, defaultDisplayOn bool
 							}
 						}
 					}
+					hostDevices = append(hostDevices, hostDevice)
 				}
 			}
 		}
