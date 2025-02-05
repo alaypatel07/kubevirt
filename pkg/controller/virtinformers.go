@@ -29,7 +29,7 @@ import (
 	"kubevirt.io/api/snapshot"
 
 	resourcev1alpha3 "k8s.io/api/resource/v1alpha3"
-	"kubevirt.io/api/clone"
+	clonebase "kubevirt.io/api/clone"
 	clone "kubevirt.io/api/clone/v1beta1"
 
 	vsv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"

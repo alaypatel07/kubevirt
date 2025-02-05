@@ -1,0 +1,72 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+featureGates:
+  DynamicResourceAllocation: true
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry:5000"]
+      endpoint = ["http://registry:5000"]
+  - |-
+    [plugins."io.containerd.grpc.v1.cri"]
+      enable_cdi = true
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |-
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            "feature-gates": "CPUManager=true"
+            "cpu-manager-policy": "static"
+            "kube-reserved": "cpu=500m"
+            "system-reserved": "cpu=500m"
+      - |-
+        kind: ClusterConfiguration
+        apiServer:
+            extraArgs:
+              runtime-config: "resource.k8s.io/v1alpha3=true"
+        scheduler:
+            extraArgs:
+              v: "1"
+        controllerManager:
+            extraArgs:
+              v: "1"
+      - |-
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            v: "1"
+  - role: worker
+    labels:
+      node-role.x-k8s.io/worker: ""
+    kubeadmConfigPatches:
+      - |-
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            v: "1"
+    extraMounts:
+    - hostPath: /nvml
+      containerPath: /nvml
+    - hostPath: /bin/nvidia-smi
+      containerPath: /bin/nvidia-smi
+    - hostPath: /usr/bin/nvidia-set-vf-bar1size
+      containerPath: /usr/bin/nvidia-set-vf-bar1size
+    - hostPath: /usr/lib/nvidia/sriov-manage
+      containerPath: /usr/lib/nvidia/sriov-manage
+      readOnly: false
+    - hostPath: /sys/devices
+      containerPath: /sys/devices
+      readOnly: false
+    - hostPath: /sys/bus
+      containerPath: /sys/bus
+      readOnly: false
+    - hostPath: /sys/module
+      containerPath: /sys/module
+      readOnly: false
+    - hostPath: /sys/kernel
+      containerPath: /sys/kernel
+      readOnly: false
+    - hostPath: /dev/vfio
+      containerPath: /dev/vfio
+      readOnly: false
