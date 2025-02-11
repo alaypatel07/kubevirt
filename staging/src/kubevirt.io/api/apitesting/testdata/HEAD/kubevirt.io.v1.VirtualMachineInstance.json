@@ -1091,14 +1091,10 @@
           "name": "nameValue",
           "deviceResourceClaimStatus": {
             "resourceClaimName": "resourceClaimNameValue",
-            "deviceName": "deviceNameValue",
-            "deviceAttributes": {
-              "deviceAttributesKey": {
-                "int": -3,
-                "bool": true,
-                "string": "stringValue",
-                "version": "versionValue"
-              }
+            "name": "nameValue",
+            "attributes": {
+              "pciAddress": "pciAddressValue",
+              "mdevUUID": "mdevUUIDValue"
             }
           }
         }
@@ -1108,14 +1104,10 @@
           "name": "nameValue",
           "deviceResourceClaimStatus": {
             "resourceClaimName": "resourceClaimNameValue",
-            "deviceName": "deviceNameValue",
-            "deviceAttributes": {
-              "deviceAttributesKey": {
-                "int": -3,
-                "bool": true,
-                "string": "stringValue",
-                "version": "versionValue"
-              }
+            "name": "nameValue",
+            "attributes": {
+              "pciAddress": "pciAddressValue",
+              "mdevUUID": "mdevUUIDValue"
             }
           }
         }

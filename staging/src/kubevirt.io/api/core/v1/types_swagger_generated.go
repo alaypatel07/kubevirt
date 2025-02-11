@@ -99,7 +99,7 @@ func (DeviceStatus) SwaggerDoc() map[string]string {
 func (DeviceStatusInfo) SwaggerDoc() map[string]string {
 	return map[string]string{
 		"name":                      "Name of the device as specified in spec.domain.devices.gpus.name or spec.domain.devices.hostDevices.name",
-		"deviceResourceClaimStatus": "DeviceResourceClaimStatus reflects the DRA related information for the degive",
+		"deviceResourceClaimStatus": "DeviceResourceClaimStatus reflects the DRA related information for the device",
 	}
 }
 
@@ -107,18 +107,16 @@ func (DeviceResourceClaimStatus) SwaggerDoc() map[string]string {
 	return map[string]string{
 		"":                  "DeviceResourceClaimStatus has to be before SyncVMI call from virt-handler to virt-launcher",
 		"resourceClaimName": "ResourceClaimName is the name of the resource claims object used to provision this resource\n+optional",
-		"deviceName":        "DeviceName is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status\n+optional",
-		"deviceAttributes":  "DeviceAttributes are the attributes published by the driver running on the node in\nresourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName\nand resourceclaim.spec.devices.requests.deviceClassName.\n+optional",
+		"name":              "Name is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status\n+optional",
+		"attributes":        "Attributes are properties of the device that could be used by kubevirt and other copmonents to learn more\nabout the device, like pciAddress or mdevUUID\n+optional",
 	}
 }
 
 func (DeviceAttribute) SwaggerDoc() map[string]string {
 	return map[string]string{
-		"":        "DeviceAttribute must have exactly one field set.",
-		"int":     "Int is a number.\n\n+optional",
-		"bool":    "Bool is a true/false value.\n\n+optional",
-		"string":  "String is a string. Must not be longer than 64 characters.\n\n+optional",
-		"version": "Version is a semantic version according to semver.org spec 2.0.0.\nMust not be longer than 64 characters.\n\n+optional",
+		"":           "DeviceAttribute must have exactly one field set.",
+		"pciAddress": "PCIAddress is the PCIe bus address of the allocated device\n+optional",
+		"mdevUUID":   "MDevUUID is the mediated device uuid of the allocated device\n+optional",
 	}
 }
 

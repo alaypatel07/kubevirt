@@ -11634,6 +11634,24 @@
      }
     }
    },
+   "k8s.io.api.core.v1.ResourceClaim": {
+    "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "properties": {
+     "name": {
+      "description": "Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.",
+      "type": "string",
+      "default": ""
+     },
+     "request": {
+      "description": "Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.",
+      "type": "string"
+     }
+    }
+   },
    "k8s.io.api.core.v1.ResourceFieldSelector": {
     "description": "ResourceFieldSelector represents container resources (cpu, memory) and their output format",
     "type": "object",
@@ -13298,21 +13316,12 @@
     "description": "DeviceAttribute must have exactly one field set.",
     "type": "object",
     "properties": {
-     "bool": {
-      "description": "Bool is a true/false value.",
-      "type": "boolean"
-     },
-     "int": {
-      "description": "Int is a number.",
-      "type": "integer",
-      "format": "int64"
-     },
-     "string": {
-      "description": "String is a string. Must not be longer than 64 characters.",
+     "mdevUUID": {
+      "description": "MDevUUID is the mediated device uuid of the allocated device",
       "type": "string"
      },
-     "version": {
-      "description": "Version is a semantic version according to semver.org spec 2.0.0. Must not be longer than 64 characters.",
+     "pciAddress": {
+      "description": "PCIAddress is the PCIe bus address of the allocated device",
       "type": "string"
      }
     }
@@ -13321,16 +13330,12 @@
     "description": "DeviceResourceClaimStatus has to be before SyncVMI call from virt-handler to virt-launcher",
     "type": "object",
     "properties": {
-     "deviceAttributes": {
-      "description": "DeviceAttributes are the attributes published by the driver running on the node in resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName and resourceclaim.spec.devices.requests.deviceClassName.",
-      "type": "object",
-      "additionalProperties": {
-       "default": {},
-       "$ref": "#/definitions/v1.DeviceAttribute"
-      }
+     "attributes": {
+      "description": "Attributes are properties of the device that could be used by kubevirt and other copmonents to learn more about the device, like pciAddress or mdevUUID",
+      "$ref": "#/definitions/v1.DeviceAttribute"
      },
-     "deviceName": {
-      "description": "DeviceName is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status",
+     "name": {
+      "description": "Name is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status",
       "type": "string"
      },
      "resourceClaimName": {
@@ -13370,7 +13375,7 @@
     ],
     "properties": {
      "deviceResourceClaimStatus": {
-      "description": "DeviceResourceClaimStatus reflects the DRA related information for the degive",
+      "description": "DeviceResourceClaimStatus reflects the DRA related information for the device",
       "$ref": "#/definitions/v1.DeviceResourceClaimStatus"
      },
      "name": {

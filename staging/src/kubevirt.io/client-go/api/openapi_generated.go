@@ -18943,30 +18943,16 @@ func schema_kubevirtio_api_core_v1_DeviceAttribute(ref common.ReferenceCallback)
 				Description: "DeviceAttribute must have exactly one field set.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"int": {
+					"pciAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Int is a number.",
-							Type:        []string{"integer"},
-							Format:      "int64",
-						},
-					},
-					"bool": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Bool is a true/false value.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"string": {
-						SchemaProps: spec.SchemaProps{
-							Description: "String is a string. Must not be longer than 64 characters.",
+							Description: "PCIAddress is the PCIe bus address of the allocated device",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"version": {
+					"mdevUUID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Version is a semantic version according to semver.org spec 2.0.0. Must not be longer than 64 characters.",
+							Description: "MDevUUID is the mediated device uuid of the allocated device",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -18991,26 +18977,17 @@ func schema_kubevirtio_api_core_v1_DeviceResourceClaimStatus(ref common.Referenc
 							Format:      "",
 						},
 					},
-					"deviceName": {
+					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DeviceName is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status",
+							Description: "Name is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"deviceAttributes": {
+					"attributes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DeviceAttributes are the attributes published by the driver running on the node in resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName and resourceclaim.spec.devices.requests.deviceClassName.",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("kubevirt.io/api/core/v1.DeviceAttribute"),
-									},
-								},
-							},
+							Description: "Attributes are properties of the device that could be used by kubevirt and other copmonents to learn more about the device, like pciAddress or mdevUUID",
+							Ref:         ref("kubevirt.io/api/core/v1.DeviceAttribute"),
 						},
 					},
 				},
@@ -19090,7 +19067,7 @@ func schema_kubevirtio_api_core_v1_DeviceStatusInfo(ref common.ReferenceCallback
 					},
 					"deviceResourceClaimStatus": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DeviceResourceClaimStatus reflects the DRA related information for the degive",
+							Description: "DeviceResourceClaimStatus reflects the DRA related information for the device",
 							Ref:         ref("kubevirt.io/api/core/v1.DeviceResourceClaimStatus"),
 						},
 					},

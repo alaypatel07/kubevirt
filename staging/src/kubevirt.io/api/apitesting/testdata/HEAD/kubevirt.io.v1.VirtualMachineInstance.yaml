@@ -605,24 +605,18 @@ status:
   deviceStatus:
     gpuStatuses:
     - deviceResourceClaimStatus:
-        deviceAttributes:
-          deviceAttributesKey:
-            bool: true
-            int: -3
-            string: stringValue
-            version: versionValue
-        deviceName: deviceNameValue
+        attributes:
+          mdevUUID: mdevUUIDValue
+          pciAddress: pciAddressValue
+        name: nameValue
         resourceClaimName: resourceClaimNameValue
       name: nameValue
     hostDeviceStatuses:
     - deviceResourceClaimStatus:
-        deviceAttributes:
-          deviceAttributesKey:
-            bool: true
-            int: -3
-            string: stringValue
-            version: versionValue
-        deviceName: deviceNameValue
+        attributes:
+          mdevUUID: mdevUUIDValue
+          pciAddress: pciAddressValue
+        name: nameValue
         resourceClaimName: resourceClaimNameValue
       name: nameValue
   evacuationNodeName: evacuationNodeNameValue

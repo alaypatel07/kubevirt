@@ -7657,6 +7657,7 @@ var CRDsValidation map[string]string = map[string]string{
                               that contains config drive networkdata.
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
                                   This field is effectively required, but due to backwards compatibility is
@@ -13564,38 +13565,25 @@ var CRDsValidation map[string]string = map[string]string{
                 properties:
                   deviceResourceClaimStatus:
                     description: DeviceResourceClaimStatus reflects the DRA related
-                      information for the degive
+                      information for the device
                     properties:
-                      deviceAttributes:
-                        additionalProperties:
-                          description: DeviceAttribute must have exactly one field
-                            set.
-                          properties:
-                            bool:
-                              description: Bool is a true/false value.
-                              type: boolean
-                            int:
-                              description: Int is a number.
-                              format: int64
-                              type: integer
-                            string:
-                              description: String is a string. Must not be longer
-                                than 64 characters.
-                              type: string
-                            version:
-                              description: |-
-                                Version is a semantic version according to semver.org spec 2.0.0.
-                                Must not be longer than 64 characters.
-                              type: string
-                          type: object
+                      attributes:
                         description: |-
-                          DeviceAttributes are the attributes published by the driver running on the node in
-                          resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName
-                          and resourceclaim.spec.devices.requests.deviceClassName.
+                          Attributes are properties of the device that could be used by kubevirt and other copmonents to learn more
+                          about the device, like pciAddress or mdevUUID
+                        properties:
+                          mdevUUID:
+                            description: MDevUUID is the mediated device uuid of the
+                              allocated device
+                            type: string
+                          pciAddress:
+                            description: PCIAddress is the PCIe bus address of the
+                              allocated device
+                            type: string
                         type: object
-                      deviceName:
-                        description: DeviceName is the name of actual device on the
-                          host provisioned by the driver as reflected in resourceclaim.status
+                      name:
+                        description: Name is the name of actual device on the host
+                          provisioned by the driver as reflected in resourceclaim.status
                         type: string
                       resourceClaimName:
                         description: ResourceClaimName is the name of the resource
@@ -13619,38 +13607,25 @@ var CRDsValidation map[string]string = map[string]string{
                 properties:
                   deviceResourceClaimStatus:
                     description: DeviceResourceClaimStatus reflects the DRA related
-                      information for the degive
+                      information for the device
                     properties:
-                      deviceAttributes:
-                        additionalProperties:
-                          description: DeviceAttribute must have exactly one field
-                            set.
-                          properties:
-                            bool:
-                              description: Bool is a true/false value.
-                              type: boolean
-                            int:
-                              description: Int is a number.
-                              format: int64
-                              type: integer
-                            string:
-                              description: String is a string. Must not be longer
-                                than 64 characters.
-                              type: string
-                            version:
-                              description: |-
-                                Version is a semantic version according to semver.org spec 2.0.0.
-                                Must not be longer than 64 characters.
-                              type: string
-                          type: object
+                      attributes:
                         description: |-
-                          DeviceAttributes are the attributes published by the driver running on the node in
-                          resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName
-                          and resourceclaim.spec.devices.requests.deviceClassName.
+                          Attributes are properties of the device that could be used by kubevirt and other copmonents to learn more
+                          about the device, like pciAddress or mdevUUID
+                        properties:
+                          mdevUUID:
+                            description: MDevUUID is the mediated device uuid of the
+                              allocated device
+                            type: string
+                          pciAddress:
+                            description: PCIAddress is the PCIe bus address of the
+                              allocated device
+                            type: string
                         type: object
-                      deviceName:
-                        description: DeviceName is the name of actual device on the
-                          host provisioned by the driver as reflected in resourceclaim.status
+                      name:
+                        description: Name is the name of actual device on the host
+                          provisioned by the driver as reflected in resourceclaim.status
                         type: string
                       resourceClaimName:
                         description: ResourceClaimName is the name of the resource
@@ -20365,38 +20340,6 @@ var CRDsValidation map[string]string = map[string]string{
                                   Resources represents the minimum resources the volume should have.
                                   More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
                                 properties:
-                                  claims:
-                                    description: |-
-                                      Claims lists the names of resources, defined in spec.resourceClaims,
-                                      that are used by this container.
-
-                                      This is an alpha field and requires enabling the
-                                      DynamicResourceAllocation feature gate.
-
-                                      This field is immutable. It can only be set for containers.
-                                    items:
-                                      description: ResourceClaim references one entry
-                                        in PodSpec.ResourceClaims.
-                                      properties:
-                                        name:
-                                          description: |-
-                                            Name must match the name of one entry in pod.spec.resourceClaims of
-                                            the Pod where this field is used. It makes that resource available
-                                            inside a container.
-                                          type: string
-                                        request:
-                                          description: |-
-                                            Request is the name chosen for a request in the referenced claim.
-                                            If empty, everything from the claim is made available, otherwise
-                                            only the result of this request.
-                                          type: string
-                                      required:
-                                      - name
-                                      type: object
-                                    type: array
-                                    x-kubernetes-list-map-keys:
-                                    - name
-                                    x-kubernetes-list-type: map
                                   limits:
                                     additionalProperties:
                                       anyOf:
@@ -25660,38 +25603,6 @@ var CRDsValidation map[string]string = map[string]string{
                                       Resources represents the minimum resources the volume should have.
                                       More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
                                     properties:
-                                      claims:
-                                        description: |-
-                                          Claims lists the names of resources, defined in spec.resourceClaims,
-                                          that are used by this container.
-
-                                          This is an alpha field and requires enabling the
-                                          DynamicResourceAllocation feature gate.
-
-                                          This field is immutable. It can only be set for containers.
-                                        items:
-                                          description: ResourceClaim references one
-                                            entry in PodSpec.ResourceClaims.
-                                          properties:
-                                            name:
-                                              description: |-
-                                                Name must match the name of one entry in pod.spec.resourceClaims of
-                                                the Pod where this field is used. It makes that resource available
-                                                inside a container.
-                                              type: string
-                                            request:
-                                              description: |-
-                                                Request is the name chosen for a request in the referenced claim.
-                                                If empty, everything from the claim is made available, otherwise
-                                                only the result of this request.
-                                              type: string
-                                          required:
-                                          - name
-                                          type: object
-                                        type: array
-                                        x-kubernetes-list-map-keys:
-                                        - name
-                                        x-kubernetes-list-type: map
                                       limits:
                                         additionalProperties:
                                           anyOf:

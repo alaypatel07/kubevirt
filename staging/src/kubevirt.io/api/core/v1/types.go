@@ -337,7 +337,7 @@ type DeviceStatus struct {
 type DeviceStatusInfo struct {
 	// Name of the device as specified in spec.domain.devices.gpus.name or spec.domain.devices.hostDevices.name
 	Name string `json:"name"`
-	// DeviceResourceClaimStatus reflects the DRA related information for the degive
+	// DeviceResourceClaimStatus reflects the DRA related information for the device
 	DeviceResourceClaimStatus *DeviceResourceClaimStatus `json:"deviceResourceClaimStatus,omitempty"`
 }
 
@@ -346,42 +346,23 @@ type DeviceResourceClaimStatus struct {
 	// ResourceClaimName is the name of the resource claims object used to provision this resource
 	// +optional
 	ResourceClaimName *string `json:"resourceClaimName,omitempty"`
-	// DeviceName is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status
+	// Name is the name of actual device on the host provisioned by the driver as reflected in resourceclaim.status
 	// +optional
-	DeviceName *string `json:"deviceName,omitempty"`
-	// DeviceAttributes are the attributes published by the driver running on the node in
-	// resourceslice.spec.devices.basic.attributes. The attributes are distinguished by deviceName
-	// and resourceclaim.spec.devices.requests.deviceClassName.
+	Name *string `json:"name,omitempty"`
+	// Attributes are properties of the device that could be used by kubevirt and other copmonents to learn more
+	// about the device, like pciAddress or mdevUUID
 	// +optional
-	DeviceAttributes map[string]DeviceAttribute `json:"deviceAttributes,omitempty"`
+	Attributes *DeviceAttribute `json:"attributes,omitempty"`
 }
 
 // DeviceAttribute must have exactly one field set.
 type DeviceAttribute struct {
-	// The Go field names below have a Value suffix to avoid a conflict between the
-	// field "String" and the corresponding method. That method is required.
-	// The Kubernetes API is defined without that suffix to keep it more natural.
-
-	// Int is a number.
-	//
+	// PCIAddress is the PCIe bus address of the allocated device
 	// +optional
-	Int *int64 `json:"int,omitempty"`
-
-	// Bool is a true/false value.
-	//
+	PCIAddress *string `json:"pciAddress,omitempty"`
+	//MDevUUID is the mediated device uuid of the allocated device
 	// +optional
-	Bool *bool `json:"bool,omitempty"`
-
-	// String is a string. Must not be longer than 64 characters.
-	//
-	// +optional
-	String *string `json:"string,omitempty"`
-
-	// Version is a semantic version according to semver.org spec 2.0.0.
-	// Must not be longer than 64 characters.
-	//
-	// +optional
-	Version *string `json:"version,omitempty"`
+	MDevUUID *string `json:"mdevUUID,omitempty"`
 }
 
 // StorageMigratedVolumeInfo tracks the information about the source and destination volumes during the volume migration
