@@ -439,12 +439,18 @@ func (c *DRAStatusController) getGPUStatusUpdate(gpuInfos []DeviceInfo, pod *k8s
 				return nil, err
 			}
 			if device != nil {
-				gpuStatus.DeviceResourceClaimStatus.DeviceName = &device.Device
-				attrs, err := c.getDeviceAttributes(pod.Spec.NodeName, device.Device, device.Driver)
+				gpuStatus.DeviceResourceClaimStatus.Name = &device.Device
+				pciAddress, mdevUUID, err := c.getDeviceAttributes(pod.Spec.NodeName, device.Device, device.Driver)
 				if err != nil {
 					return nil, err
 				}
-				gpuStatus.DeviceResourceClaimStatus.DeviceAttributes = attrs
+				gpuStatus.DeviceResourceClaimStatus.Attributes = &virtv1.DeviceAttribute{}
+				if pciAddress != "" {
+					gpuStatus.DeviceResourceClaimStatus.Attributes.PCIAddress = &pciAddress
+				}
+				if mdevUUID != "" {
+					gpuStatus.DeviceResourceClaimStatus.Attributes.MDevUUID = &mdevUUID
+				}
 			}
 		}
 		gpuStatuses = append(gpuStatuses, gpuStatus)
@@ -488,33 +494,31 @@ func (c *DRAStatusController) getAllocatedDevice(resourceClaimNamespace, resourc
 	return nil, nil
 }
 
-func (c *DRAStatusController) getDeviceAttributes(nodeName string, deviceName, driverName string) (map[string]virtv1.DeviceAttribute, error) {
+// getDeviceAttributes returns the pciAddress and mdevUUID of the device. It will return both if found, otherwise it will return empty strings
+func (c *DRAStatusController) getDeviceAttributes(nodeName string, Name, driverName string) (string, string, error) {
 	cachedObjs := c.resourceSliceIndexer.List()
 	if len(cachedObjs) == 0 {
 		log.Log.V(4).Infof("No VMIs detected")
-		return nil, nil
+		return "", "", nil
 	}
 
-	attributes := map[string]virtv1.DeviceAttribute{}
-
+	pciAddress := ""
+	mdevUUID := ""
 	for _, obj := range cachedObjs {
 		rs := obj.(*resourcev1alpha3.ResourceSlice)
 		if rs.Spec.Driver == driverName && rs.Spec.NodeName == nodeName {
 			for _, device := range rs.Spec.Devices {
-				if device.Name == deviceName {
+				if device.Name == Name {
 					for key, value := range device.Basic.Attributes {
-						attributes[string(key)] = virtv1.DeviceAttribute{
-							Int:     value.IntValue,
-							Bool:    value.BoolValue,
-							String:  value.StringValue,
-							Version: value.VersionValue,
+						if string(key) == "pciAddress" {
+							pciAddress = *value.StringValue
+						} else if string(key) == "uuid" {
+							mdevUUID = *value.StringValue
 						}
 					}
 				}
 			}
-			return attributes, nil
 		}
-
 	}
-	return nil, nil
+	return pciAddress, mdevUUID, nil
 }

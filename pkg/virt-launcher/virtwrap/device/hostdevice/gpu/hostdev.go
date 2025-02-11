@@ -85,8 +85,8 @@ func getDRAPCIHostDevices(vmi *v1.VirtualMachineInstance) ([]api.HostDevice, err
 	if vmi.Status.DeviceStatus != nil {
 		for _, gpu := range vmi.Status.DeviceStatus.GPUStatuses {
 			if gpu.DeviceResourceClaimStatus != nil {
-				if pciAddress, ok := gpu.DeviceResourceClaimStatus.DeviceAttributes["pciAddress"]; ok {
-					hostAddr, err := device.NewPciAddressField(*pciAddress.String)
+				if gpu.DeviceResourceClaimStatus.Attributes.PCIAddress != nil {
+					hostAddr, err := device.NewPciAddressField(*gpu.DeviceResourceClaimStatus.Attributes.PCIAddress)
 					if err != nil {
 						return nil, fmt.Errorf("failed to create PCI device for %s: %v", gpu.Name, err)
 					}
@@ -108,15 +108,17 @@ func getDRAMDEVHostDevices(vmi *v1.VirtualMachineInstance, defaultDisplayOn bool
 	if vmi.Status.DeviceStatus != nil {
 		for _, gpu := range vmi.Status.DeviceStatus.GPUStatuses {
 			if gpu.DeviceResourceClaimStatus != nil {
-				if _, ok := gpu.DeviceResourceClaimStatus.DeviceAttributes["pciAddress"]; ok {
+				// if pciAddress is set, this is a pGPU
+				if gpu.DeviceResourceClaimStatus.Attributes.PCIAddress != nil {
 					continue
 				}
-				if uuid, ok := gpu.DeviceResourceClaimStatus.DeviceAttributes["uuid"]; ok {
+				// if mdevUUID is set, this is a vGPU
+				if gpu.DeviceResourceClaimStatus.Attributes.MDevUUID != nil {
 					hostDevice := api.HostDevice{
 						Alias: api.NewUserDefinedAlias(AliasPrefix + gpu.Name),
 						Source: api.HostDeviceSource{
 							Address: &api.Address{
-								UUID: *uuid.String,
+								UUID: *gpu.DeviceResourceClaimStatus.Attributes.MDevUUID,
 							},
 						},
 						Type:  api.HostDeviceMDev,
