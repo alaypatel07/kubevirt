@@ -269,6 +269,7 @@ func ensureSelectorLabelPresent(migration *virtv1.VirtualMachineInstanceMigratio
 func (c *Controller) patchVMI(origVMI, newVMI *virtv1.VirtualMachineInstance) error {
 	patchSet := patch.New()
 	if !equality.Semantic.DeepEqual(origVMI.Status.MigrationState, newVMI.Status.MigrationState) {
+		log.Log.Infof("patching vmi status migrationState: %+v", newVMI.Status.MigrationState)
 		if origVMI.Status.MigrationState == nil {
 			patchSet.AddOption(patch.WithAdd("/status/migrationState", newVMI.Status.MigrationState))
 		} else {
@@ -280,6 +281,7 @@ func (c *Controller) patchVMI(origVMI, newVMI *virtv1.VirtualMachineInstance) er
 	}
 
 	if !patchSet.IsEmpty() {
+		log.Log.Infof("patching vmi status with patchSet: %+v", patchSet)
 		patchBytes, err := patchSet.GeneratePayload()
 		if err != nil {
 			return err
@@ -972,6 +974,7 @@ func (c *Controller) handleTargetPodHandoff(migration *virtv1.VirtualMachineInst
 		SourceNode:   vmi.Status.NodeName,
 		TargetPod:    pod.Name,
 	}
+	log.Log.Infof("vmiCopy migration state: %+v", vmiCopy.Status.MigrationState)
 	if migration.Status.MigrationState != nil {
 		vmiCopy.Status.MigrationState.SourcePod = migration.Status.MigrationState.SourcePod
 		vmiCopy.Status.MigrationState.SourcePersistentStatePVCName = migration.Status.MigrationState.SourcePersistentStatePVCName
