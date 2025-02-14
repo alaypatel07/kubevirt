@@ -337,19 +337,33 @@ func (c *DRAStatusController) execute(key string) error {
 		log.Log.Info("vmi being deleted, dra status controller skipping")
 		return nil
 	}
-	// Only consider pods which belong to this vmi
-	// excluding unfinalized migration targets from this list.
-	pod, err := controller.CurrentVMIPod(vmi, c.podIndexer)
-	if err != nil {
-		logger.Reason(err).Error("Failed to fetch pods for namespace from cache.")
-		return err
+	var pod *k8sv1.Pod
+	if vmi.Status.MigrationState != nil && vmi.Status.MigrationState.TargetNode != "" && vmi.Status.MigrationState.TargetNodeAddress != "" {
+		log.Log.Infof("vmi %s is being migrated to node %s, dra status controller will sync target pod's status", vmi.Name, vmi.Status.MigrationState.TargetNode)
+		pod, err = c.getTargetPod(vmi)
+		if err != nil {
+			logger.Reason(err).Error("Failed to fetch target pod for vmi")
+			return err
+		}
+		return nil
+	} else {
+		// Only consider pods which belong to this vmi
+		// excluding unfinalized migration targets from this list.
+		pod, err = controller.CurrentVMIPod(vmi, c.podIndexer)
+		if err != nil {
+			logger.Reason(err).Error("Failed to fetch pods for namespace from cache.")
+			return err
+		}
 	}
-	if pod == nil {
-		return fmt.Errorf("nil pod reference for vmi")
-	}
+
 	if vmi == nil {
 		return fmt.Errorf("nil vmi reference")
 	}
+
+	if pod == nil {
+		return fmt.Errorf("nil pod reference")
+	}
+	logger.Infof("syncing pod %s/%s", pod.Namespace, pod.Name)
 
 	err = c.updateStatus(vmi, pod)
 	if err != nil {
@@ -357,6 +371,68 @@ func (c *DRAStatusController) execute(key string) error {
 		return err
 	}
 
+	if vmi.Status.MigrationState != nil && vmi.Status.MigrationState.TargetNode != "" && vmi.Status.MigrationState.TargetNodeAddress != "" {
+		err = c.updateDraMigrationSyncCondition(vmi)
+		if err != nil {
+			logger.Reason(err).Error("error updating dra migration sync condition")
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *DRAStatusController) getTargetPod(vmi *virtv1.VirtualMachineInstance) (*k8sv1.Pod, error) {
+	if vmi.Status.MigrationState != nil && vmi.Status.MigrationState.TargetPod != "" {
+		item, ok, err := c.podIndexer.GetByKey(vmi.Status.MigrationState.TargetPod)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, fmt.Errorf("target pod %s not found", vmi.Status.MigrationState.TargetPod)
+		}
+		return item.(*k8sv1.Pod), nil
+	}
+	return nil, fmt.Errorf("vmi %s/%s does not have a target pod", vmi.Namespace, vmi.Name)
+}
+
+func (c *DRAStatusController) updateDraMigrationSyncCondition(vmi *virtv1.VirtualMachineInstance) error {
+	// Create the condition
+	draMigrationSyncCond := virtv1.VirtualMachineInstanceCondition{
+		Type:               "DRAMigrationSync",
+		Reason:             "TargetPodDeviceUpdated",
+		Message:            "The target pod's devices have been updated to VMI status",
+		LastProbeTime:      metav1.Now(),
+		LastTransitionTime: metav1.Now(),
+		Status:             k8sv1.ConditionTrue,
+	}
+
+	if vmi.Status.Conditions == nil {
+		vmi.Status.Conditions = []virtv1.VirtualMachineInstanceCondition{}
+	}
+	vmi.Status.Conditions = append(vmi.Status.Conditions, draMigrationSyncCond)
+
+	// Generate patch
+	ps := patch.New(
+		patch.WithTest("/status/conditions", vmi.Status.Conditions),
+		patch.WithReplace("/status/conditions", vmi.Status.Conditions),
+	)
+
+	patchBytes, err := ps.GeneratePayload()
+	if err != nil {
+		return err
+	}
+
+	// Apply the patch to update VMI status
+	_, err = c.clientset.VirtualMachineInstance(vmi.Namespace).Patch(context.TODO(),
+		vmi.Name,
+		types.JSONPatchType,
+		patchBytes,
+		metav1.PatchOptions{},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to patch VMI with DRAMigrationSync condition: %v", err)
+	}
 	return nil
 }
 

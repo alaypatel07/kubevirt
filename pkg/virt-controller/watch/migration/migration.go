@@ -279,6 +279,31 @@ func (c *Controller) patchVMI(origVMI, newVMI *virtv1.VirtualMachineInstance) er
 		}
 	}
 
+	if !patchSet.IsEmpty() {
+		patchBytes, err := patchSet.GeneratePayload()
+		if err != nil {
+			return err
+		}
+		if _, err = c.clientset.VirtualMachineInstance(origVMI.Namespace).Patch(context.Background(), origVMI.Name, types.JSONPatchType, patchBytes, v1.PatchOptions{}); err != nil {
+			return err
+		}
+	}
+
+	found := false
+	if origVMI.Status.Conditions != nil {
+		for _, condition := range newVMI.Status.Conditions {
+			if condition.Type == "DRAMigrationSync" && condition.Status == k8sv1.ConditionTrue {
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("DRAMigrationSync condition not found")
+	}
+
+	patchSet = patch.New()
 	if !equality.Semantic.DeepEqual(origVMI.Labels, newVMI.Labels) {
 		patchSet.AddOption(
 			patch.WithTest("/metadata/labels", origVMI.Labels),
@@ -718,27 +743,27 @@ func (c *Controller) createTargetPod(migration *virtv1.VirtualMachineInstanceMig
 		return fmt.Errorf("failed to render launch manifest: %v", err)
 	}
 
-	antiAffinityTerm := k8sv1.PodAffinityTerm{
-		LabelSelector: &v1.LabelSelector{
-			MatchLabels: map[string]string{
-				virtv1.CreatedByLabel: string(vmi.UID),
-			},
-		},
-		TopologyKey: k8sv1.LabelHostname,
-	}
-	antiAffinityRule := &k8sv1.PodAntiAffinity{
-		RequiredDuringSchedulingIgnoredDuringExecution: []k8sv1.PodAffinityTerm{antiAffinityTerm},
-	}
+	// antiAffinityTerm := k8sv1.PodAffinityTerm{
+	// 	LabelSelector: &v1.LabelSelector{
+	// 		MatchLabels: map[string]string{
+	// 			virtv1.CreatedByLabel: string(vmi.UID),
+	// 		},
+	// 	},
+	// 	TopologyKey: k8sv1.LabelHostname,
+	// }
+	// antiAffinityRule := &k8sv1.PodAntiAffinity{
+	// 	RequiredDuringSchedulingIgnoredDuringExecution: []k8sv1.PodAffinityTerm{antiAffinityTerm},
+	// }
 
-	if templatePod.Spec.Affinity == nil {
-		templatePod.Spec.Affinity = &k8sv1.Affinity{
-			PodAntiAffinity: antiAffinityRule,
-		}
-	} else if templatePod.Spec.Affinity.PodAntiAffinity == nil {
-		templatePod.Spec.Affinity.PodAntiAffinity = antiAffinityRule
-	} else {
-		templatePod.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(templatePod.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, antiAffinityTerm)
-	}
+	// if templatePod.Spec.Affinity == nil {
+	// 	templatePod.Spec.Affinity = &k8sv1.Affinity{
+	// 		PodAntiAffinity: antiAffinityRule,
+	// 	}
+	// } else if templatePod.Spec.Affinity.PodAntiAffinity == nil {
+	// 	templatePod.Spec.Affinity.PodAntiAffinity = antiAffinityRule
+	// } else {
+	// 	templatePod.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(templatePod.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, antiAffinityTerm)
+	// }
 
 	templatePod.ObjectMeta.Labels[virtv1.MigrationJobLabel] = string(migration.UID)
 	templatePod.ObjectMeta.Annotations[virtv1.MigrationJobNameAnnotation] = migration.Name
