@@ -335,12 +335,16 @@ func (c *DRAStatusController) execute(key string) error {
 	}
 
 	// Handle migration case
-	if isMigrating(vmi) {
+	if isMigrationInScheduling(vmi) {
 		return c.handleMigratingVMI(vmi, logger)
 	}
 
-	// Handle normal case
-	return c.handleNormalVMI(vmi, logger)
+	if vmi.Status.MigrationState == nil {
+		// Handle normal case
+		return c.handleNormalVMI(vmi, logger)
+	}
+
+	return nil
 }
 
 func (c *DRAStatusController) handleMigratingVMI(vmi *virtv1.VirtualMachineInstance, logger *log.FilteredLogger) error {
@@ -389,8 +393,38 @@ func (c *DRAStatusController) handleNormalVMI(vmi *virtv1.VirtualMachineInstance
 	return nil
 }
 
-func isMigrating(vmi *virtv1.VirtualMachineInstance) bool {
-	return vmi.Status.MigrationState != nil && vmi.Status.MigrationState.TargetNode != ""
+func isMigrationInScheduling(vmi *virtv1.VirtualMachineInstance) bool {
+	// This is a hack for Migration being in scheduling state
+	return vmi.Status.MigrationState != nil && vmi.Status.MigrationState.TargetNode == "" && vmi.Status.MigrationState.SourceNode != ""
+}
+
+func (c *DRAStatusController) getTargetPod(vmi *virtv1.VirtualMachineInstance) (*k8sv1.Pod, error) {
+	// Get all pods from the namespace
+	objs, err := c.podIndexer.ByIndex(cache.NamespaceIndex, vmi.Namespace)
+	if err != nil {
+		return nil, err
+	}
+	pods := []*k8sv1.Pod{}
+	for _, obj := range objs {
+		pod := obj.(*k8sv1.Pod)
+		pods = append(pods, pod)
+	}
+
+	for _, pod := range pods {
+		if !controller.IsControlledBy(pod, vmi) {
+			continue
+		}
+
+		// check if the pod has a migrationJobUID label
+		// if it does, it is a migration target pod and we should not consider it
+		if pod.Labels != nil {
+			if _, ok := pod.Labels[virtv1.MigrationJobLabel]; ok {
+				return pod, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("no migration pod found")
 }
 
 func (c *DRAStatusController) getSourcePod(vmi *virtv1.VirtualMachineInstance) (*k8sv1.Pod, error) {
@@ -428,20 +462,6 @@ func (c *DRAStatusController) getSourcePod(vmi *virtv1.VirtualMachineInstance) (
 	}
 
 	return curPod, nil
-}
-
-func (c *DRAStatusController) getTargetPod(vmi *virtv1.VirtualMachineInstance) (*k8sv1.Pod, error) {
-	if vmi.Status.MigrationState != nil && vmi.Status.MigrationState.TargetPod != "" {
-		item, ok, err := c.podIndexer.GetByKey(vmi.Namespace + "/" + vmi.Status.MigrationState.TargetPod)
-		if err != nil {
-			return nil, err
-		}
-		if !ok {
-			return nil, fmt.Errorf("target pod %s not found", vmi.Status.MigrationState.TargetPod)
-		}
-		return item.(*k8sv1.Pod), nil
-	}
-	return nil, fmt.Errorf("vmi %s/%s does not have a target pod", vmi.Namespace, vmi.Name)
 }
 
 func (c *DRAStatusController) updateDraMigrationSyncCondition(vmi *virtv1.VirtualMachineInstance) error {
@@ -573,7 +593,8 @@ func (c *DRAStatusController) getGPUStatusUpdate(gpuInfos []DeviceInfo, pod *k8s
 	gpuStatuses := []virtv1.DeviceStatusInfo{}
 	for _, gpuInfo := range gpuInfos {
 		gpuStatus := virtv1.DeviceStatusInfo{
-			Name: gpuInfo.Name,
+			Name:    gpuInfo.Name,
+			PodName: pod.Name,
 			DeviceResourceClaimStatus: &virtv1.DeviceResourceClaimStatus{
 				ResourceClaimName: c.getResourceClaimNameForDevice(gpuInfo.VMISpecClaimName, pod),
 			},

@@ -337,6 +337,10 @@ type DeviceStatus struct {
 type DeviceStatusInfo struct {
 	// Name of the device as specified in spec.domain.devices.gpus.name or spec.domain.devices.hostDevices.name
 	Name string `json:"name"`
+	// PodName is the name of the virt-laucher pod that is responsible for the device
+	// In case of migration, there could be more than one pod holding the same device
+	// +optional
+	PodName string `json:"podName,omitempty"`
 	// DeviceResourceClaimStatus reflects the DRA related information for the device
 	DeviceResourceClaimStatus *DeviceResourceClaimStatus `json:"deviceResourceClaimStatus,omitempty"`
 }

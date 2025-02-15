@@ -280,32 +280,6 @@ func (c *Controller) patchVMI(origVMI, newVMI *virtv1.VirtualMachineInstance) er
 		}
 	}
 
-	if !patchSet.IsEmpty() {
-		log.Log.Infof("patching vmi status with patchSet: %+v", patchSet)
-		patchBytes, err := patchSet.GeneratePayload()
-		if err != nil {
-			return err
-		}
-		if _, err = c.clientset.VirtualMachineInstance(origVMI.Namespace).Patch(context.Background(), origVMI.Name, types.JSONPatchType, patchBytes, v1.PatchOptions{}); err != nil {
-			return err
-		}
-	}
-
-	found := false
-	if origVMI.Status.Conditions != nil {
-		for _, condition := range newVMI.Status.Conditions {
-			if condition.Type == "DRAMigrationSync" && condition.Status == k8sv1.ConditionTrue {
-				found = true
-				break
-			}
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("DRAMigrationSync condition not found")
-	}
-
-	patchSet = patch.New()
 	if !equality.Semantic.DeepEqual(origVMI.Labels, newVMI.Labels) {
 		patchSet.AddOption(
 			patch.WithTest("/metadata/labels", origVMI.Labels),
@@ -648,7 +622,7 @@ func (c *Controller) processMigrationPhase(
 			conditionManager.RemoveCondition(migrationCopy, virtv1.VirtualMachineInstanceMigrationRejectedByResourceQuota)
 		}
 		if controller.IsPodReady(pod) {
-			if controller.VMIHasHotplugVolumes(vmi) {
+			if controller.VMIHasHotplugVolumes(vmi) && c.IsDraStatusSynced(vmi, pod) {
 				if attachmentPod != nil && controller.IsPodReady(attachmentPod) {
 					log.Log.Object(migration).Infof("Attachment pod %s for vmi %s/%s is ready", attachmentPod.Name, vmi.Namespace, vmi.Name)
 					migrationCopy.Status.Phase = virtv1.MigrationScheduled
@@ -702,6 +676,21 @@ func (c *Controller) processMigrationPhase(
 		}
 	}
 	return nil
+}
+
+func (c *Controller) IsDraStatusSynced(vmi *virtv1.VirtualMachineInstance, pod *k8sv1.Pod) bool {
+	if vmi.Status.DeviceStatus == nil {
+		return false
+	}
+
+	// TODO: add support for HostDevices
+	for _, device := range vmi.Status.DeviceStatus.GPUStatuses {
+		if device.PodName != pod.Name {
+			return false
+		}
+	}
+
+	return len(vmi.Status.DeviceStatus.GPUStatuses) > 0
 }
 
 func setTargetPodSELinuxLevel(pod *k8sv1.Pod, vmiSeContext string) error {
