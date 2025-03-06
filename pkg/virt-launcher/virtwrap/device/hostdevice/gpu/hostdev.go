@@ -171,11 +171,11 @@ func getGPUSpecFromName(vmi *v1.VirtualMachineInstance, gpu string) *v1.GPU {
 func createHostDevicesMetadata(vmiGPUs []v1.GPU) []hostdevice.HostDeviceMetaData {
 	var hostDevicesMetaData []hostdevice.HostDeviceMetaData
 	for _, dev := range vmiGPUs {
-		if dev.Claim == nil {
+		if dev.DeviceSource.ClaimRequest == nil {
 			hostDevicesMetaData = append(hostDevicesMetaData, hostdevice.HostDeviceMetaData{
 				AliasPrefix:       AliasPrefix,
 				Name:              dev.Name,
-				ResourceName:      dev.DeviceName,
+				ResourceName:      dev.DeviceSource.DeviceName,
 				VirtualGPUOptions: dev.VirtualGPUOptions,
 			})
 		}
@@ -190,7 +190,7 @@ func createHostDevicesMetadata(vmiGPUs []v1.GPU) []hostdevice.HostDeviceMetaData
 func validateCreationOfAllDevices(gpus []v1.GPU, hostDevices []api.HostDevice) error {
 	gpusWithDP := []v1.GPU{}
 	for _, gpu := range gpusWithDP {
-		if gpu.Claim != nil {
+		if gpu.DeviceSource.ClaimRequest != nil {
 			continue
 		}
 		gpusWithDP = append(gpusWithDP, gpu)

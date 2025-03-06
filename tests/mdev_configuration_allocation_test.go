@@ -257,8 +257,10 @@ var _ = Describe("[sig-compute]MediatedDevices", Serial, decorators.VGPU, decora
 			vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("1G")
 			vGPUs := []v1.GPU{
 				{
-					Name:       "gpu1",
-					DeviceName: deviceName,
+					Name: "gpu1",
+					DeviceSource: v1.DeviceSource{
+						DeviceName: deviceName,
+					},
 				},
 			}
 			vmi.Spec.Domain.Devices.GPUs = vGPUs
@@ -288,8 +290,10 @@ var _ = Describe("[sig-compute]MediatedDevices", Serial, decorators.VGPU, decora
 			vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("1G")
 			vGPUs := []v1.GPU{
 				{
-					Name:       "gpu2",
-					DeviceName: deviceName,
+					Name: "gpu2",
+					DeviceSource: v1.DeviceSource{
+						DeviceName: deviceName,
+					},
 					VirtualGPUOptions: &v1.VGPUOptions{
 						Display: &v1.VGPUDisplayOptions{
 							Enabled: &_false,
@@ -338,8 +342,10 @@ var _ = Describe("[sig-compute]MediatedDevices", Serial, decorators.VGPU, decora
 			vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("1G")
 			vGPUs := []v1.GPU{
 				{
-					Name:       "gpu1",
-					DeviceName: updatedDeviceName,
+					Name: "gpu1",
+					DeviceSource: v1.DeviceSource{
+						DeviceName: updatedDeviceName,
+					},
 				},
 			}
 			vmi.Spec.Domain.Devices.GPUs = vGPUs

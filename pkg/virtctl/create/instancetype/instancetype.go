@@ -140,7 +140,7 @@ func (c *createInstancetype) withGPUs(instancetypeSpec *instancetypev1beta1.Virt
 			return params.FlagErr(GPUFlag, deviceNameErr)
 		}
 
-		instancetypeSpec.GPUs = append(instancetypeSpec.GPUs, v1.GPU{Name: obj.Name, DeviceName: obj.DeviceName})
+		instancetypeSpec.GPUs = append(instancetypeSpec.GPUs, v1.GPU{Name: obj.Name, DeviceSource: v1.DeviceSource{DeviceName: obj.DeviceName}})
 	}
 
 	return nil
@@ -160,7 +160,7 @@ func (c *createInstancetype) withHostDevices(instancetypeSpec *instancetypev1bet
 			return params.FlagErr(HostDeviceFlag, deviceNameErr)
 		}
 
-		instancetypeSpec.HostDevices = append(instancetypeSpec.HostDevices, v1.HostDevice{Name: obj.Name, DeviceName: obj.DeviceName})
+		instancetypeSpec.HostDevices = append(instancetypeSpec.HostDevices, v1.HostDevice{Name: obj.Name, DeviceSource: v1.DeviceSource{DeviceName: obj.DeviceName}})
 	}
 
 	return nil

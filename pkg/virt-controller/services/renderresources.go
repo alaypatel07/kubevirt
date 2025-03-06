@@ -282,11 +282,11 @@ func WithGPUs(gpus []v1.GPU) ResourceRendererOption {
 	return func(renderer *ResourceRenderer) {
 		resources := renderer.ResourceRequirements()
 		for _, gpu := range gpus {
-			if gpu.DeviceName != "" {
-				requestResource(&resources, gpu.DeviceName)
+			if gpu.DeviceSource.DeviceName != "" {
+				requestResource(&resources, gpu.DeviceSource.DeviceName)
 			}
-			if gpu.Claim != nil {
-				requestResourceClaims(&resources, gpu.Claim)
+			if gpu.DeviceSource.ClaimRequest != nil {
+				requestResourceClaims(&resources, gpu.DeviceSource.ClaimRequest)
 			}
 		}
 		copyResources(resources.Limits, renderer.calculatedLimits)
@@ -299,11 +299,11 @@ func WithHostDevices(hostDevices []v1.HostDevice) ResourceRendererOption {
 	return func(renderer *ResourceRenderer) {
 		resources := renderer.ResourceRequirements()
 		for _, hostDev := range hostDevices {
-			if hostDev.DeviceName != "" {
-				requestResource(&resources, hostDev.DeviceName)
+			if hostDev.DeviceSource.DeviceName != "" {
+				requestResource(&resources, hostDev.DeviceSource.DeviceName)
 			}
-			if hostDev.Claim != nil {
-				requestResourceClaims(&resources, hostDev.Claim)
+			if hostDev.DeviceSource.ClaimRequest != nil {
+				requestResourceClaims(&resources, hostDev.DeviceSource.ClaimRequest)
 			}
 		}
 		copyResources(resources.Limits, renderer.calculatedLimits)
@@ -337,12 +337,12 @@ func copyResources(srcResources, dstResources k8sv1.ResourceList) {
 }
 
 // TODO: make this a generic
-func requestResourceClaims(resources *k8sv1.ResourceRequirements, claim *k8sv1.ResourceClaim) {
+func requestResourceClaims(resources *k8sv1.ResourceRequirements, claimRequest *v1.ClaimRequest) {
 	if resources.Claims == nil {
-		resources.Claims = []k8sv1.ResourceClaim{*claim}
+		resources.Claims = []k8sv1.ResourceClaim{{Name: claimRequest.ClaimName, Request: claimRequest.RequestName}}
 		return
 	}
-	resources.Claims = append(resources.Claims, *claim)
+	resources.Claims = append(resources.Claims, k8sv1.ResourceClaim{Name: claimRequest.ClaimName, Request: claimRequest.RequestName})
 }
 
 func copyResourceClaims(resources *k8sv1.ResourceRequirements, claims *[]k8sv1.ResourceClaim) {
@@ -564,8 +564,8 @@ func validatePermittedHostDevices(spec *v1.VirtualMachineInstanceSpec, config *v
 		//	}
 		//}
 		for _, hostDev := range spec.Domain.Devices.HostDevices {
-			if _, exist := supportedHostDevicesMap[hostDev.DeviceName]; !exist {
-				errors = append(errors, fmt.Sprintf("HostDevice %s is not permitted in permittedHostDevices configuration", hostDev.DeviceName))
+			if _, exist := supportedHostDevicesMap[hostDev.DeviceSource.DeviceName]; !exist {
+				errors = append(errors, fmt.Sprintf("HostDevice %s is not permitted in permittedHostDevices configuration", hostDev.DeviceSource.DeviceName))
 			}
 		}
 	}

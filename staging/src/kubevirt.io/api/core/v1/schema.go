@@ -591,14 +591,32 @@ type DownwardMetrics struct{}
 type GPU struct {
 	// Name of the GPU device as exposed by a device plugin
 	Name string `json:"name"`
-	// DeviceName is the name of the device provisioned by device-plugins
-	DeviceName string `json:"deviceName,omitempty"`
-	// Claim is the name of the claim that is going to provision the DRA device
-	Claim             *v1.ResourceClaim `json:"claim,omitempty"`
-	VirtualGPUOptions *VGPUOptions      `json:"virtualGPUOptions,omitempty"`
+	// DeviceSource is the name of the device provisioned either by device plugins
+	// or by DRA enabled device
+	// DeviceName string `json:"deviceName"`    <-- inlined into DeviceSource
+	DeviceSource      DeviceSource `json:",inline"`
+	VirtualGPUOptions *VGPUOptions `json:"virtualGPUOptions,omitempty"`
 	// If specified, the virtual network interface address and its tag will be provided to the guest via config drive
 	// +optional
 	Tag string `json:"tag,omitempty"`
+}
+
+type DeviceSource struct {
+	// DeviceName is the name of the device provisioned by device-plugins
+	DeviceName string `json:"deviceName,omitempty"`
+	// ClaimRequest provides the ClaimName from vmi.spec.resourceClaims[].name and
+	// requestName from resourceClaim.spec.devices.requests[].name
+	// this fields requires DRA feature gate enabled
+	ClaimRequest *ClaimRequest `json:",inline,omitempty"`
+}
+
+type ClaimRequest struct {
+	// ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+	// device is allocated
+	ClaimName string `json:"claimName"`
+	// RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+	// device is requested
+	RequestName string `json:"requestName"`
 }
 
 type VGPUOptions struct {
@@ -618,10 +636,10 @@ type VGPUDisplayOptions struct {
 
 type HostDevice struct {
 	Name string `json:"name"`
-	// DeviceName is the name of the device provisioned by device-plugins
-	DeviceName string `json:"deviceName,omitempty"`
-	// Claim is the name of the claim that is going to provision the DRA device
-	Claim *v1.ResourceClaim `json:"claim,omitempty"`
+	// DeviceSource is the name of the device provisioned either by device plugins
+	// or by DRA enabled device
+	// DeviceName string `json:"deviceName"`    <-- inlined into DeviceSource
+	DeviceSource DeviceSource `json:",inline"`
 	// If specified, the virtual network interface address and its tag will be provided to the guest via config drive
 	// +optional
 	Tag string `json:"tag,omitempty"`

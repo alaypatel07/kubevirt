@@ -43,15 +43,15 @@ var _ = Describe("Generic HostDevice", func() {
 	})
 
 	It("fails to create devices given no resource", func() {
-		vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{{DeviceName: hostdevResource0, Name: hostdevName0}}
+		vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName0}}
 		_, err := generic.CreateHostDevices(vmi.Spec.Domain.Devices.HostDevices)
 		Expect(err).To(HaveOccurred())
 	})
 
 	It("fails to create device given two devices but only one address", func() {
 		vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{
-			{DeviceName: hostdevResource0, Name: hostdevName0},
-			{DeviceName: hostdevResource0, Name: hostdevName1},
+			{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName0},
+			{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName1},
 		}
 		pciPool := newAddressPoolStub()
 		pciPool.AddResource(hostdevResource0, hostdevPCIAddress0)
@@ -65,8 +65,8 @@ var _ = Describe("Generic HostDevice", func() {
 
 	It("creates two devices, PCI and MDEV", func() {
 		vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{
-			{DeviceName: hostdevResource0, Name: hostdevName0},
-			{DeviceName: hostdevResource1, Name: hostdevName1},
+			{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName0},
+			{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource1}, Name: hostdevName1},
 		}
 		pciPool := newAddressPoolStub()
 		pciPool.AddResource(hostdevResource0, hostdevPCIAddress0)

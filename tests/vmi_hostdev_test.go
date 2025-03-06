@@ -72,8 +72,10 @@ var _ = Describe("[sig-compute]HostDevices", Serial, decorators.SigCompute, func
 					ResourceName:      deviceName,
 				})
 				hostDevs = append(hostDevs, v1.HostDevice{
-					Name:       fmt.Sprintf("sound%d", i),
-					DeviceName: deviceName,
+					Name: fmt.Sprintf("sound%d", i),
+					DeviceSource: v1.DeviceSource{
+						DeviceName: deviceName,
+					},
 				})
 			}
 			kvconfig.UpdateKubeVirtConfigValueAndWait(config)

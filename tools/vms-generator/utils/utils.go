@@ -958,8 +958,10 @@ func GetVMIGPU() *v1.VirtualMachineInstance {
 	vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("1024M")
 	GPUs := []v1.GPU{
 		{
-			Name:       "gpu1",
-			DeviceName: "nvidia.com/GP102GL_Tesla_P40",
+			Name: "gpu1",
+			DeviceSource: v1.DeviceSource{
+				DeviceName: "nvidia.com/GP102GL_Tesla_P40",
+			},
 		},
 	}
 	vmi.Spec.Domain.Devices.GPUs = GPUs
@@ -986,8 +988,8 @@ func GetVMIUSB() *v1.VirtualMachineInstance {
 
 	vmi.Spec.Domain.Devices.HostDevices = append(vmi.Spec.Domain.Devices.HostDevices,
 		v1.HostDevice{
-			Name:       "node-usb-to-vmi-storage",
-			DeviceName: "kubevirt.io/storage",
+			Name:         "node-usb-to-vmi-storage",
+			DeviceSource: v1.DeviceSource{DeviceName: "kubevirt.io/storage"},
 		})
 	return vmi
 }

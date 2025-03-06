@@ -97,8 +97,10 @@ var _ = Describe("[sig-compute][USB] host USB Passthrough", Serial, decorators.S
 			hostDevs := []v1.HostDevice{}
 			for i, name := range deviceNames {
 				hostDevs = append(hostDevs, v1.HostDevice{
-					Name:       fmt.Sprintf("usb-%d-%s", i, name),
-					DeviceName: resourceName,
+					Name: fmt.Sprintf("usb-%d-%s", i, name),
+					DeviceSource: v1.DeviceSource{
+						DeviceName: resourceName,
+					},
 				})
 			}
 

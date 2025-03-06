@@ -409,12 +409,12 @@ func (c *DRAStatusController) isPodResourceClaimStatusFilled(pod *k8sv1.Pod) boo
 func (c *DRAStatusController) getGPUDevicesFromVMISpec(vmi *virtv1.VirtualMachineInstance) ([]DeviceInfo, error) {
 	gpuDevices := []DeviceInfo{}
 	for _, gpu := range vmi.Spec.Domain.Devices.GPUs {
-		if gpu.Claim == nil {
+		if gpu.DeviceSource.ClaimRequest == nil {
 			continue
 		}
 		gpuDevices = append(gpuDevices, DeviceInfo{
-			VMISpecClaimName:   gpu.Claim.Name,
-			VMISpecRequestName: gpu.Claim.Request,
+			VMISpecClaimName:   gpu.DeviceSource.ClaimRequest.ClaimName,
+			VMISpecRequestName: gpu.DeviceSource.ClaimRequest.RequestName,
 			DeviceStatusInfo: &virtv1.DeviceStatusInfo{
 				Name:                      gpu.Name,
 				DeviceResourceClaimStatus: nil,

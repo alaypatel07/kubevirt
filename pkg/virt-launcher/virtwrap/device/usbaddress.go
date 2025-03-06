@@ -29,7 +29,7 @@ import (
 
 func USBDevicesFound(vmiHostDevices []v1.HostDevice) bool {
 	for _, device := range vmiHostDevices {
-		env := util.ResourceNameToEnvVar(v1.USBResourcePrefix, device.DeviceName)
+		env := util.ResourceNameToEnvVar(v1.USBResourcePrefix, device.DeviceSource.DeviceName)
 		if _, ok := os.LookupEnv(env); ok {
 			return true
 		}

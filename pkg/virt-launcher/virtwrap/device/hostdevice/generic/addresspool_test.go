@@ -71,7 +71,7 @@ var _ = Describe("Generic Address Pool", func() {
 
 	DescribeTable("creates an empty pool when no resources are specified",
 		func(newPool func([]v1.HostDevice) *hostdevice.AddressPool) {
-			vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{{DeviceName: hostdevResource0, Name: hostdevName0}}
+			vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName0}}
 			pool := newPool(vmi.Spec.Domain.Devices.HostDevices)
 			expectPoolPopFailure(pool, hostdevResource0)
 		},
@@ -81,7 +81,7 @@ var _ = Describe("Generic Address Pool", func() {
 
 	DescribeTable("succeeds to pop 2 addresses from same resource",
 		func(newPool func([]v1.HostDevice) *hostdevice.AddressPool, prefix, address0, address1 string) {
-			vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{{DeviceName: hostdevResource0, Name: hostdevName0}}
+			vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName0}}
 			env := []envData{newResourceEnv(prefix, envHostDevResource0, address0, address1)}
 			withEnvironmentContext(env, func() {
 				pool := newPool(vmi.Spec.Domain.Devices.HostDevices)
@@ -96,8 +96,8 @@ var _ = Describe("Generic Address Pool", func() {
 	DescribeTable("succeeds to pop 2 addresses from two resources",
 		func(newPool func([]v1.HostDevice) *hostdevice.AddressPool, prefix, address0, address1 string) {
 			vmi.Spec.Domain.Devices.HostDevices = []v1.HostDevice{
-				{DeviceName: hostdevResource0, Name: hostdevName0},
-				{DeviceName: hostdevResource1, Name: hostdevName1},
+				{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource0}, Name: hostdevName0},
+				{DeviceSource: v1.DeviceSource{DeviceName: hostdevResource1}, Name: hostdevName1},
 			}
 			env := []envData{
 				newResourceEnv(prefix, envHostDevResource0, address0),
