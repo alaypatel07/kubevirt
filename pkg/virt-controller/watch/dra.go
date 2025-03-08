@@ -25,7 +25,7 @@ import (
 	"time"
 
 	k8sv1 "k8s.io/api/core/v1"
-	resourcev1alpha3 "k8s.io/api/resource/v1alpha3"
+	resourcev1beta1 "k8s.io/api/resource/v1beta1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -467,7 +467,7 @@ func (c *DRAStatusController) getResourceClaimNameForDevice(claimName string, po
 	return nil
 }
 
-func (c *DRAStatusController) getAllocatedDevice(resourceClaimNamespace, resourceClaimName, requestName string) (*resourcev1alpha3.DeviceRequestAllocationResult, error) {
+func (c *DRAStatusController) getAllocatedDevice(resourceClaimNamespace, resourceClaimName, requestName string) (*resourcev1beta1.DeviceRequestAllocationResult, error) {
 	key := controller.NamespacedKey(resourceClaimNamespace, resourceClaimName)
 	obj, exists, err := c.resourceClaimIndexer.GetByKey(key)
 	if err != nil {
@@ -476,7 +476,7 @@ func (c *DRAStatusController) getAllocatedDevice(resourceClaimNamespace, resourc
 	if !exists {
 		return nil, fmt.Errorf("resource claim %s does not exist", key)
 	}
-	resourceClaim := obj.(*resourcev1alpha3.ResourceClaim)
+	resourceClaim := obj.(*resourcev1beta1.ResourceClaim)
 
 	if resourceClaim.Status.Allocation == nil {
 		return nil, nil
@@ -505,7 +505,7 @@ func (c *DRAStatusController) getDeviceAttributes(nodeName string, Name, driverN
 	pciAddress := ""
 	mdevUUID := ""
 	for _, obj := range cachedObjs {
-		rs := obj.(*resourcev1alpha3.ResourceSlice)
+		rs := obj.(*resourcev1beta1.ResourceSlice)
 		if rs.Spec.Driver == driverName && rs.Spec.NodeName == nodeName {
 			for _, device := range rs.Spec.Devices {
 				if device.Name == Name {
