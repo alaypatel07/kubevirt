@@ -1428,14 +1428,14 @@ func (f *kubeInformerFactory) ResourceQuota() cache.SharedIndexInformer {
 
 func (f *kubeInformerFactory) ResourceClaim() cache.SharedIndexInformer {
 	return f.getInformer("resourceClaimInformer", func() cache.SharedIndexInformer {
-		lw := cache.NewListWatchFromClient(f.clientSet.ResourceV1alpha3().RESTClient(), "resourceclaims", k8sv1.NamespaceAll, fields.Everything())
+		lw := cache.NewListWatchFromClient(f.clientSet.ResourceV1beta1().RESTClient(), "resourceclaims", k8sv1.NamespaceAll, fields.Everything())
 		return cache.NewSharedIndexInformer(lw, &resourcev1beta1.ResourceClaim{}, f.defaultResync, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 	})
 }
 
 func (f *kubeInformerFactory) ResourceSlice() cache.SharedIndexInformer {
 	return f.getInformer("resourceSliceInformer", func() cache.SharedIndexInformer {
-		lw := cache.NewListWatchFromClient(f.clientSet.ResourceV1alpha3().RESTClient(), "resourceslices", k8sv1.NamespaceAll, fields.Everything())
+		lw := cache.NewListWatchFromClient(f.clientSet.ResourceV1beta1().RESTClient(), "resourceslices", k8sv1.NamespaceAll, fields.Everything())
 		return cache.NewSharedIndexInformer(lw, &resourcev1beta1.ResourceSlice{}, f.defaultResync, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 	})
 }
