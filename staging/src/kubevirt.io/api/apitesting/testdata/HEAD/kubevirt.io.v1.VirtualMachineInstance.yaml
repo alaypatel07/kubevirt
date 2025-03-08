@@ -273,10 +273,11 @@ spec:
       - name: nameValue
         virtiofs: {}
       gpus:
-      - claim:
-          name: nameValue
-          request: requestValue
-        deviceName: deviceNameValue
+      - DeviceSource:
+          ClaimRequest:
+            claimName: claimNameValue
+            requestName: requestNameValue
+          deviceName: deviceNameValue
         name: nameValue
         tag: tagValue
         virtualGPUOptions:
@@ -285,10 +286,11 @@ spec:
             ramFB:
               enabled: true
       hostDevices:
-      - claim:
-          name: nameValue
-          request: requestValue
-        deviceName: deviceNameValue
+      - DeviceSource:
+          ClaimRequest:
+            claimName: claimNameValue
+            requestName: requestNameValue
+          deviceName: deviceNameValue
         name: nameValue
         tag: tagValue
       inputs:

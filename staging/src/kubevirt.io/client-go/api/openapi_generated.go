@@ -344,6 +344,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubevirt.io/api/core/v1.CPUTopology":                                                        schema_kubevirtio_api_core_v1_CPUTopology(ref),
 		"kubevirt.io/api/core/v1.CertConfig":                                                         schema_kubevirtio_api_core_v1_CertConfig(ref),
 		"kubevirt.io/api/core/v1.Chassis":                                                            schema_kubevirtio_api_core_v1_Chassis(ref),
+		"kubevirt.io/api/core/v1.ClaimRequest":                                                       schema_kubevirtio_api_core_v1_ClaimRequest(ref),
 		"kubevirt.io/api/core/v1.ClientPassthroughDevices":                                           schema_kubevirtio_api_core_v1_ClientPassthroughDevices(ref),
 		"kubevirt.io/api/core/v1.Clock":                                                              schema_kubevirtio_api_core_v1_Clock(ref),
 		"kubevirt.io/api/core/v1.ClockOffset":                                                        schema_kubevirtio_api_core_v1_ClockOffset(ref),
@@ -374,6 +375,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubevirt.io/api/core/v1.DeveloperConfiguration":                                             schema_kubevirtio_api_core_v1_DeveloperConfiguration(ref),
 		"kubevirt.io/api/core/v1.DeviceAttribute":                                                    schema_kubevirtio_api_core_v1_DeviceAttribute(ref),
 		"kubevirt.io/api/core/v1.DeviceResourceClaimStatus":                                          schema_kubevirtio_api_core_v1_DeviceResourceClaimStatus(ref),
+		"kubevirt.io/api/core/v1.DeviceSource":                                                       schema_kubevirtio_api_core_v1_DeviceSource(ref),
 		"kubevirt.io/api/core/v1.DeviceStatus":                                                       schema_kubevirtio_api_core_v1_DeviceStatus(ref),
 		"kubevirt.io/api/core/v1.DeviceStatusInfo":                                                   schema_kubevirtio_api_core_v1_DeviceStatusInfo(ref),
 		"kubevirt.io/api/core/v1.Devices":                                                            schema_kubevirtio_api_core_v1_Devices(ref),
@@ -18049,6 +18051,35 @@ func schema_kubevirtio_api_core_v1_Chassis(ref common.ReferenceCallback) common.
 	}
 }
 
+func schema_kubevirtio_api_core_v1_ClaimRequest(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"claimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requestName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"claimName", "requestName"},
+			},
+		},
+	}
+}
+
 func schema_kubevirtio_api_core_v1_ClientPassthroughDevices(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -18995,6 +19026,42 @@ func schema_kubevirtio_api_core_v1_DeviceResourceClaimStatus(ref common.Referenc
 		},
 		Dependencies: []string{
 			"kubevirt.io/api/core/v1.DeviceAttribute"},
+	}
+}
+
+func schema_kubevirtio_api_core_v1_DeviceSource(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"deviceName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DeviceName is the name of the device provisioned by device-plugins",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"claimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requestName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"claimName", "requestName"},
+			},
+		},
 	}
 }
 
@@ -20250,10 +20317,20 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 							Format:      "",
 						},
 					},
-					"claim": {
+					"claimName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Claim is the name of the claim that is going to provision the DRA device",
-							Ref:         ref("k8s.io/api/core/v1.ResourceClaim"),
+							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requestName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"virtualGPUOptions": {
@@ -20269,11 +20346,11 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 						},
 					},
 				},
-				Required: []string{"name"},
+				Required: []string{"name", "claimName", "requestName"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.ResourceClaim", "kubevirt.io/api/core/v1.VGPUOptions"},
+			"kubevirt.io/api/core/v1.VGPUOptions"},
 	}
 }
 
@@ -20460,10 +20537,20 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 							Format:      "",
 						},
 					},
-					"claim": {
+					"claimName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Claim is the name of the claim that is going to provision the DRA device",
-							Ref:         ref("k8s.io/api/core/v1.ResourceClaim"),
+							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requestName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tag": {
@@ -20474,11 +20561,9 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"name"},
+				Required: []string{"name", "claimName", "requestName"},
 			},
 		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.ResourceClaim"},
 	}
 }
 

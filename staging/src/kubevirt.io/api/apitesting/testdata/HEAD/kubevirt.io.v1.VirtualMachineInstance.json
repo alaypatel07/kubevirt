@@ -316,10 +316,12 @@
         "gpus": [
           {
             "name": "nameValue",
-            "deviceName": "deviceNameValue",
-            "claim": {
-              "name": "nameValue",
-              "request": "requestValue"
+            "DeviceSource": {
+              "deviceName": "deviceNameValue",
+              "ClaimRequest": {
+                "claimName": "claimNameValue",
+                "requestName": "requestNameValue"
+              }
             },
             "virtualGPUOptions": {
               "display": {
@@ -342,10 +344,12 @@
         "hostDevices": [
           {
             "name": "nameValue",
-            "deviceName": "deviceNameValue",
-            "claim": {
-              "name": "nameValue",
-              "request": "requestValue"
+            "DeviceSource": {
+              "deviceName": "deviceNameValue",
+              "ClaimRequest": {
+                "claimName": "claimNameValue",
+                "requestName": "requestNameValue"
+              }
             },
             "tag": "tagValue"
           }

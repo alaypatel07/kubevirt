@@ -11634,24 +11634,6 @@
      }
     }
    },
-   "k8s.io.api.core.v1.ResourceClaim": {
-    "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
-    "type": "object",
-    "required": [
-     "name"
-    ],
-    "properties": {
-     "name": {
-      "description": "Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.",
-      "type": "string",
-      "default": ""
-     },
-     "request": {
-      "description": "Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.",
-      "type": "string"
-     }
-    }
-   },
    "k8s.io.api.core.v1.ResourceFieldSelector": {
     "description": "ResourceFieldSelector represents container resources (cpu, memory) and their output format",
     "type": "object",
@@ -14000,12 +13982,15 @@
    "v1.GPU": {
     "type": "object",
     "required": [
-     "name"
+     "name",
+     "claimName",
+     "requestName"
     ],
     "properties": {
-     "claim": {
-      "description": "Claim is the name of the claim that is going to provision the DRA device",
-      "$ref": "#/definitions/k8s.io.api.core.v1.ResourceClaim"
+     "claimName": {
+      "description": "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+      "type": "string",
+      "default": ""
      },
      "deviceName": {
       "description": "DeviceName is the name of the device provisioned by device-plugins",
@@ -14013,6 +13998,11 @@
      },
      "name": {
       "description": "Name of the GPU device as exposed by a device plugin",
+      "type": "string",
+      "default": ""
+     },
+     "requestName": {
+      "description": "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
       "type": "string",
       "default": ""
      },
@@ -14102,18 +14092,26 @@
    "v1.HostDevice": {
     "type": "object",
     "required": [
-     "name"
+     "name",
+     "claimName",
+     "requestName"
     ],
     "properties": {
-     "claim": {
-      "description": "Claim is the name of the claim that is going to provision the DRA device",
-      "$ref": "#/definitions/k8s.io.api.core.v1.ResourceClaim"
+     "claimName": {
+      "description": "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+      "type": "string",
+      "default": ""
      },
      "deviceName": {
       "description": "DeviceName is the name of the device provisioned by device-plugins",
       "type": "string"
      },
      "name": {
+      "type": "string",
+      "default": ""
+     },
+     "requestName": {
+      "description": "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
       "type": "string",
       "default": ""
      },

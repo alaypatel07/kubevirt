@@ -317,10 +317,23 @@ func (DownwardMetrics) SwaggerDoc() map[string]string {
 
 func (GPU) SwaggerDoc() map[string]string {
 	return map[string]string{
-		"name":       "Name of the GPU device as exposed by a device plugin",
-		"deviceName": "DeviceName is the name of the device provisioned by device-plugins",
-		"claim":      "Claim is the name of the claim that is going to provision the DRA device",
-		"tag":        "If specified, the virtual network interface address and its tag will be provided to the guest via config drive\n+optional",
+		"name":         "Name of the GPU device as exposed by a device plugin",
+		"DeviceSource": "DeviceSource is the name of the device provisioned either by device plugins\nor by DRA enabled device\nDeviceName string `json:\"deviceName\"`    <-- inlined into DeviceSource",
+		"tag":          "If specified, the virtual network interface address and its tag will be provided to the guest via config drive\n+optional",
+	}
+}
+
+func (DeviceSource) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"deviceName":   "DeviceName is the name of the device provisioned by device-plugins",
+		"ClaimRequest": "ClaimRequest provides the ClaimName from vmi.spec.resourceClaims[].name and\nrequestName from resourceClaim.spec.devices.requests[].name\nthis fields requires DRA feature gate enabled",
+	}
+}
+
+func (ClaimRequest) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"claimName":   "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this\ndevice is allocated",
+		"requestName": "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this\ndevice is requested",
 	}
 }
 
@@ -337,9 +350,8 @@ func (VGPUDisplayOptions) SwaggerDoc() map[string]string {
 
 func (HostDevice) SwaggerDoc() map[string]string {
 	return map[string]string{
-		"deviceName": "DeviceName is the name of the device provisioned by device-plugins",
-		"claim":      "Claim is the name of the claim that is going to provision the DRA device",
-		"tag":        "If specified, the virtual network interface address and its tag will be provided to the guest via config drive\n+optional",
+		"DeviceSource": "DeviceSource is the name of the device provisioned either by device plugins\nor by DRA enabled device\nDeviceName string `json:\"deviceName\"`    <-- inlined into DeviceSource",
+		"tag":          "If specified, the virtual network interface address and its tag will be provided to the guest via config drive\n+optional",
 	}
 }
 

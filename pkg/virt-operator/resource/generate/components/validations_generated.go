@@ -6166,25 +6166,11 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a GPU device to the vmi.
                           items:
                             properties:
-                              claim:
-                                description: Claim is the name of the claim that is
-                                  going to provision the DRA device
-                                properties:
-                                  name:
-                                    description: |-
-                                      Name must match the name of one entry in pod.spec.resourceClaims of
-                                      the Pod where this field is used. It makes that resource available
-                                      inside a container.
-                                    type: string
-                                  request:
-                                    description: |-
-                                      Request is the name chosen for a request in the referenced claim.
-                                      If empty, everything from the claim is made available, otherwise
-                                      only the result of this request.
-                                    type: string
-                                required:
-                                - name
-                                type: object
+                              claimName:
+                                description: |-
+                                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                  device is allocated
+                                type: string
                               deviceName:
                                 description: DeviceName is the name of the device
                                   provisioned by device-plugins
@@ -6192,6 +6178,11 @@ var CRDsValidation map[string]string = map[string]string{
                               name:
                                 description: Name of the GPU device as exposed by
                                   a device plugin
+                                type: string
+                              requestName:
+                                description: |-
+                                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                  device is requested
                                 type: string
                               tag:
                                 description: If specified, the virtual network interface
@@ -6221,7 +6212,9 @@ var CRDsValidation map[string]string = map[string]string{
                                     type: object
                                 type: object
                             required:
+                            - claimName
                             - name
+                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -6229,30 +6222,21 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a host device to the vmi.
                           items:
                             properties:
-                              claim:
-                                description: Claim is the name of the claim that is
-                                  going to provision the DRA device
-                                properties:
-                                  name:
-                                    description: |-
-                                      Name must match the name of one entry in pod.spec.resourceClaims of
-                                      the Pod where this field is used. It makes that resource available
-                                      inside a container.
-                                    type: string
-                                  request:
-                                    description: |-
-                                      Request is the name chosen for a request in the referenced claim.
-                                      If empty, everything from the claim is made available, otherwise
-                                      only the result of this request.
-                                    type: string
-                                required:
-                                - name
-                                type: object
+                              claimName:
+                                description: |-
+                                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                  device is allocated
+                                type: string
                               deviceName:
                                 description: DeviceName is the name of the device
                                   provisioned by device-plugins
                                 type: string
                               name:
+                                type: string
+                              requestName:
+                                description: |-
+                                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                  device is requested
                                 type: string
                               tag:
                                 description: If specified, the virtual network interface
@@ -6260,7 +6244,9 @@ var CRDsValidation map[string]string = map[string]string{
                                   via config drive
                                 type: string
                             required:
+                            - claimName
                             - name
+                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -8956,30 +8942,21 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any GPU devices associated with the instancetype.
           items:
             properties:
-              claim:
-                description: Claim is the name of the claim that is going to provision
-                  the DRA device
-                properties:
-                  name:
-                    description: |-
-                      Name must match the name of one entry in pod.spec.resourceClaims of
-                      the Pod where this field is used. It makes that resource available
-                      inside a container.
-                    type: string
-                  request:
-                    description: |-
-                      Request is the name chosen for a request in the referenced claim.
-                      If empty, everything from the claim is made available, otherwise
-                      only the result of this request.
-                    type: string
-                required:
-                - name
-                type: object
+              claimName:
+                description: |-
+                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                  device is allocated
+                type: string
               deviceName:
                 description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
                 description: Name of the GPU device as exposed by a device plugin
+                type: string
+              requestName:
+                description: |-
+                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                  device is requested
                 type: string
               tag:
                 description: If specified, the virtual network interface address and
@@ -9008,7 +8985,9 @@ var CRDsValidation map[string]string = map[string]string{
                     type: object
                 type: object
             required:
+            - claimName
             - name
+            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -9016,36 +8995,29 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any HostDevices associated with the instancetype.
           items:
             properties:
-              claim:
-                description: Claim is the name of the claim that is going to provision
-                  the DRA device
-                properties:
-                  name:
-                    description: |-
-                      Name must match the name of one entry in pod.spec.resourceClaims of
-                      the Pod where this field is used. It makes that resource available
-                      inside a container.
-                    type: string
-                  request:
-                    description: |-
-                      Request is the name chosen for a request in the referenced claim.
-                      If empty, everything from the claim is made available, otherwise
-                      only the result of this request.
-                    type: string
-                required:
-                - name
-                type: object
+              claimName:
+                description: |-
+                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                  device is allocated
+                type: string
               deviceName:
                 description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
+                type: string
+              requestName:
+                description: |-
+                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                  device is requested
                 type: string
               tag:
                 description: If specified, the virtual network interface address and
                   its tag will be provided to the guest via config drive
                 type: string
             required:
+            - claimName
             - name
+            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -11583,25 +11555,11 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a GPU device to the vmi.
                   items:
                     properties:
-                      claim:
-                        description: Claim is the name of the claim that is going
-                          to provision the DRA device
-                        properties:
-                          name:
-                            description: |-
-                              Name must match the name of one entry in pod.spec.resourceClaims of
-                              the Pod where this field is used. It makes that resource available
-                              inside a container.
-                            type: string
-                          request:
-                            description: |-
-                              Request is the name chosen for a request in the referenced claim.
-                              If empty, everything from the claim is made available, otherwise
-                              only the result of this request.
-                            type: string
-                        required:
-                        - name
-                        type: object
+                      claimName:
+                        description: |-
+                          ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                          device is allocated
+                        type: string
                       deviceName:
                         description: DeviceName is the name of the device provisioned
                           by device-plugins
@@ -11609,6 +11567,11 @@ var CRDsValidation map[string]string = map[string]string{
                       name:
                         description: Name of the GPU device as exposed by a device
                           plugin
+                        type: string
+                      requestName:
+                        description: |-
+                          RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                          device is requested
                         type: string
                       tag:
                         description: If specified, the virtual network interface address
@@ -11637,7 +11600,9 @@ var CRDsValidation map[string]string = map[string]string{
                             type: object
                         type: object
                     required:
+                    - claimName
                     - name
+                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -11645,37 +11610,30 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a host device to the vmi.
                   items:
                     properties:
-                      claim:
-                        description: Claim is the name of the claim that is going
-                          to provision the DRA device
-                        properties:
-                          name:
-                            description: |-
-                              Name must match the name of one entry in pod.spec.resourceClaims of
-                              the Pod where this field is used. It makes that resource available
-                              inside a container.
-                            type: string
-                          request:
-                            description: |-
-                              Request is the name chosen for a request in the referenced claim.
-                              If empty, everything from the claim is made available, otherwise
-                              only the result of this request.
-                            type: string
-                        required:
-                        - name
-                        type: object
+                      claimName:
+                        description: |-
+                          ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                          device is allocated
+                        type: string
                       deviceName:
                         description: DeviceName is the name of the device provisioned
                           by device-plugins
                         type: string
                       name:
                         type: string
+                      requestName:
+                        description: |-
+                          RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                          device is requested
+                        type: string
                       tag:
                         description: If specified, the virtual network interface address
                           and its tag will be provided to the guest via config drive
                         type: string
                     required:
+                    - claimName
                     - name
+                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -14972,25 +14930,11 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a GPU device to the vmi.
                   items:
                     properties:
-                      claim:
-                        description: Claim is the name of the claim that is going
-                          to provision the DRA device
-                        properties:
-                          name:
-                            description: |-
-                              Name must match the name of one entry in pod.spec.resourceClaims of
-                              the Pod where this field is used. It makes that resource available
-                              inside a container.
-                            type: string
-                          request:
-                            description: |-
-                              Request is the name chosen for a request in the referenced claim.
-                              If empty, everything from the claim is made available, otherwise
-                              only the result of this request.
-                            type: string
-                        required:
-                        - name
-                        type: object
+                      claimName:
+                        description: |-
+                          ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                          device is allocated
+                        type: string
                       deviceName:
                         description: DeviceName is the name of the device provisioned
                           by device-plugins
@@ -14998,6 +14942,11 @@ var CRDsValidation map[string]string = map[string]string{
                       name:
                         description: Name of the GPU device as exposed by a device
                           plugin
+                        type: string
+                      requestName:
+                        description: |-
+                          RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                          device is requested
                         type: string
                       tag:
                         description: If specified, the virtual network interface address
@@ -15026,7 +14975,9 @@ var CRDsValidation map[string]string = map[string]string{
                             type: object
                         type: object
                     required:
+                    - claimName
                     - name
+                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -15034,37 +14985,30 @@ var CRDsValidation map[string]string = map[string]string{
                   description: Whether to attach a host device to the vmi.
                   items:
                     properties:
-                      claim:
-                        description: Claim is the name of the claim that is going
-                          to provision the DRA device
-                        properties:
-                          name:
-                            description: |-
-                              Name must match the name of one entry in pod.spec.resourceClaims of
-                              the Pod where this field is used. It makes that resource available
-                              inside a container.
-                            type: string
-                          request:
-                            description: |-
-                              Request is the name chosen for a request in the referenced claim.
-                              If empty, everything from the claim is made available, otherwise
-                              only the result of this request.
-                            type: string
-                        required:
-                        - name
-                        type: object
+                      claimName:
+                        description: |-
+                          ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                          device is allocated
+                        type: string
                       deviceName:
                         description: DeviceName is the name of the device provisioned
                           by device-plugins
                         type: string
                       name:
                         type: string
+                      requestName:
+                        description: |-
+                          RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                          device is requested
+                        type: string
                       tag:
                         description: If specified, the virtual network interface address
                           and its tag will be provided to the guest via config drive
                         type: string
                     required:
+                    - claimName
                     - name
+                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -17426,25 +17370,11 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a GPU device to the vmi.
                           items:
                             properties:
-                              claim:
-                                description: Claim is the name of the claim that is
-                                  going to provision the DRA device
-                                properties:
-                                  name:
-                                    description: |-
-                                      Name must match the name of one entry in pod.spec.resourceClaims of
-                                      the Pod where this field is used. It makes that resource available
-                                      inside a container.
-                                    type: string
-                                  request:
-                                    description: |-
-                                      Request is the name chosen for a request in the referenced claim.
-                                      If empty, everything from the claim is made available, otherwise
-                                      only the result of this request.
-                                    type: string
-                                required:
-                                - name
-                                type: object
+                              claimName:
+                                description: |-
+                                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                  device is allocated
+                                type: string
                               deviceName:
                                 description: DeviceName is the name of the device
                                   provisioned by device-plugins
@@ -17452,6 +17382,11 @@ var CRDsValidation map[string]string = map[string]string{
                               name:
                                 description: Name of the GPU device as exposed by
                                   a device plugin
+                                type: string
+                              requestName:
+                                description: |-
+                                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                  device is requested
                                 type: string
                               tag:
                                 description: If specified, the virtual network interface
@@ -17481,7 +17416,9 @@ var CRDsValidation map[string]string = map[string]string{
                                     type: object
                                 type: object
                             required:
+                            - claimName
                             - name
+                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -17489,30 +17426,21 @@ var CRDsValidation map[string]string = map[string]string{
                           description: Whether to attach a host device to the vmi.
                           items:
                             properties:
-                              claim:
-                                description: Claim is the name of the claim that is
-                                  going to provision the DRA device
-                                properties:
-                                  name:
-                                    description: |-
-                                      Name must match the name of one entry in pod.spec.resourceClaims of
-                                      the Pod where this field is used. It makes that resource available
-                                      inside a container.
-                                    type: string
-                                  request:
-                                    description: |-
-                                      Request is the name chosen for a request in the referenced claim.
-                                      If empty, everything from the claim is made available, otherwise
-                                      only the result of this request.
-                                    type: string
-                                required:
-                                - name
-                                type: object
+                              claimName:
+                                description: |-
+                                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                  device is allocated
+                                type: string
                               deviceName:
                                 description: DeviceName is the name of the device
                                   provisioned by device-plugins
                                 type: string
                               name:
+                                type: string
+                              requestName:
+                                description: |-
+                                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                  device is requested
                                 type: string
                               tag:
                                 description: If specified, the virtual network interface
@@ -17520,7 +17448,9 @@ var CRDsValidation map[string]string = map[string]string{
                                   via config drive
                                 type: string
                             required:
+                            - claimName
                             - name
+                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -19496,30 +19426,21 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any GPU devices associated with the instancetype.
           items:
             properties:
-              claim:
-                description: Claim is the name of the claim that is going to provision
-                  the DRA device
-                properties:
-                  name:
-                    description: |-
-                      Name must match the name of one entry in pod.spec.resourceClaims of
-                      the Pod where this field is used. It makes that resource available
-                      inside a container.
-                    type: string
-                  request:
-                    description: |-
-                      Request is the name chosen for a request in the referenced claim.
-                      If empty, everything from the claim is made available, otherwise
-                      only the result of this request.
-                    type: string
-                required:
-                - name
-                type: object
+              claimName:
+                description: |-
+                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                  device is allocated
+                type: string
               deviceName:
                 description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
                 description: Name of the GPU device as exposed by a device plugin
+                type: string
+              requestName:
+                description: |-
+                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                  device is requested
                 type: string
               tag:
                 description: If specified, the virtual network interface address and
@@ -19548,7 +19469,9 @@ var CRDsValidation map[string]string = map[string]string{
                     type: object
                 type: object
             required:
+            - claimName
             - name
+            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -19556,36 +19479,29 @@ var CRDsValidation map[string]string = map[string]string{
           description: Optionally defines any HostDevices associated with the instancetype.
           items:
             properties:
-              claim:
-                description: Claim is the name of the claim that is going to provision
-                  the DRA device
-                properties:
-                  name:
-                    description: |-
-                      Name must match the name of one entry in pod.spec.resourceClaims of
-                      the Pod where this field is used. It makes that resource available
-                      inside a container.
-                    type: string
-                  request:
-                    description: |-
-                      Request is the name chosen for a request in the referenced claim.
-                      If empty, everything from the claim is made available, otherwise
-                      only the result of this request.
-                    type: string
-                required:
-                - name
-                type: object
+              claimName:
+                description: |-
+                  ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                  device is allocated
+                type: string
               deviceName:
                 description: DeviceName is the name of the device provisioned by device-plugins
                 type: string
               name:
+                type: string
+              requestName:
+                description: |-
+                  RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                  device is requested
                 type: string
               tag:
                 description: If specified, the virtual network interface address and
                   its tag will be provided to the guest via config drive
                 type: string
             required:
+            - claimName
             - name
+            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -22050,25 +21966,11 @@ var CRDsValidation map[string]string = map[string]string{
                                     vmi.
                                   items:
                                     properties:
-                                      claim:
-                                        description: Claim is the name of the claim
-                                          that is going to provision the DRA device
-                                        properties:
-                                          name:
-                                            description: |-
-                                              Name must match the name of one entry in pod.spec.resourceClaims of
-                                              the Pod where this field is used. It makes that resource available
-                                              inside a container.
-                                            type: string
-                                          request:
-                                            description: |-
-                                              Request is the name chosen for a request in the referenced claim.
-                                              If empty, everything from the claim is made available, otherwise
-                                              only the result of this request.
-                                            type: string
-                                        required:
-                                        - name
-                                        type: object
+                                      claimName:
+                                        description: |-
+                                          ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                          device is allocated
+                                        type: string
                                       deviceName:
                                         description: DeviceName is the name of the
                                           device provisioned by device-plugins
@@ -22076,6 +21978,11 @@ var CRDsValidation map[string]string = map[string]string{
                                       name:
                                         description: Name of the GPU device as exposed
                                           by a device plugin
+                                        type: string
+                                      requestName:
+                                        description: |-
+                                          RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                          device is requested
                                         type: string
                                       tag:
                                         description: If specified, the virtual network
@@ -22105,7 +22012,9 @@ var CRDsValidation map[string]string = map[string]string{
                                             type: object
                                         type: object
                                     required:
+                                    - claimName
                                     - name
+                                    - requestName
                                     type: object
                                   type: array
                                   x-kubernetes-list-type: atomic
@@ -22114,30 +22023,21 @@ var CRDsValidation map[string]string = map[string]string{
                                     the vmi.
                                   items:
                                     properties:
-                                      claim:
-                                        description: Claim is the name of the claim
-                                          that is going to provision the DRA device
-                                        properties:
-                                          name:
-                                            description: |-
-                                              Name must match the name of one entry in pod.spec.resourceClaims of
-                                              the Pod where this field is used. It makes that resource available
-                                              inside a container.
-                                            type: string
-                                          request:
-                                            description: |-
-                                              Request is the name chosen for a request in the referenced claim.
-                                              If empty, everything from the claim is made available, otherwise
-                                              only the result of this request.
-                                            type: string
-                                        required:
-                                        - name
-                                        type: object
+                                      claimName:
+                                        description: |-
+                                          ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                          device is allocated
+                                        type: string
                                       deviceName:
                                         description: DeviceName is the name of the
                                           device provisioned by device-plugins
                                         type: string
                                       name:
+                                        type: string
+                                      requestName:
+                                        description: |-
+                                          RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                          device is requested
                                         type: string
                                       tag:
                                         description: If specified, the virtual network
@@ -22145,7 +22045,9 @@ var CRDsValidation map[string]string = map[string]string{
                                           to the guest via config drive
                                         type: string
                                     required:
+                                    - claimName
                                     - name
+                                    - requestName
                                     type: object
                                   type: array
                                   x-kubernetes-list-type: atomic
@@ -27334,26 +27236,11 @@ var CRDsValidation map[string]string = map[string]string{
                                         to the vmi.
                                       items:
                                         properties:
-                                          claim:
-                                            description: Claim is the name of the
-                                              claim that is going to provision the
-                                              DRA device
-                                            properties:
-                                              name:
-                                                description: |-
-                                                  Name must match the name of one entry in pod.spec.resourceClaims of
-                                                  the Pod where this field is used. It makes that resource available
-                                                  inside a container.
-                                                type: string
-                                              request:
-                                                description: |-
-                                                  Request is the name chosen for a request in the referenced claim.
-                                                  If empty, everything from the claim is made available, otherwise
-                                                  only the result of this request.
-                                                type: string
-                                            required:
-                                            - name
-                                            type: object
+                                          claimName:
+                                            description: |-
+                                              ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                              device is allocated
+                                            type: string
                                           deviceName:
                                             description: DeviceName is the name of
                                               the device provisioned by device-plugins
@@ -27361,6 +27248,11 @@ var CRDsValidation map[string]string = map[string]string{
                                           name:
                                             description: Name of the GPU device as
                                               exposed by a device plugin
+                                            type: string
+                                          requestName:
+                                            description: |-
+                                              RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                              device is requested
                                             type: string
                                           tag:
                                             description: If specified, the virtual
@@ -27391,7 +27283,9 @@ var CRDsValidation map[string]string = map[string]string{
                                                 type: object
                                             type: object
                                         required:
+                                        - claimName
                                         - name
+                                        - requestName
                                         type: object
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -27400,31 +27294,21 @@ var CRDsValidation map[string]string = map[string]string{
                                         to the vmi.
                                       items:
                                         properties:
-                                          claim:
-                                            description: Claim is the name of the
-                                              claim that is going to provision the
-                                              DRA device
-                                            properties:
-                                              name:
-                                                description: |-
-                                                  Name must match the name of one entry in pod.spec.resourceClaims of
-                                                  the Pod where this field is used. It makes that resource available
-                                                  inside a container.
-                                                type: string
-                                              request:
-                                                description: |-
-                                                  Request is the name chosen for a request in the referenced claim.
-                                                  If empty, everything from the claim is made available, otherwise
-                                                  only the result of this request.
-                                                type: string
-                                            required:
-                                            - name
-                                            type: object
+                                          claimName:
+                                            description: |-
+                                              ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                              device is allocated
+                                            type: string
                                           deviceName:
                                             description: DeviceName is the name of
                                               the device provisioned by device-plugins
                                             type: string
                                           name:
+                                            type: string
+                                          requestName:
+                                            description: |-
+                                              RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                              device is requested
                                             type: string
                                           tag:
                                             description: If specified, the virtual
@@ -27433,7 +27317,9 @@ var CRDsValidation map[string]string = map[string]string{
                                               drive
                                             type: string
                                         required:
+                                        - claimName
                                         - name
+                                        - requestName
                                         type: object
                                       type: array
                                       x-kubernetes-list-type: atomic
