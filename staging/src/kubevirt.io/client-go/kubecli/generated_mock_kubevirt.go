@@ -39,7 +39,6 @@ import (
 	v1alpha12 "k8s.io/client-go/kubernetes/typed/certificates/v1alpha1"
 	v1beta14 "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
 	v110 "k8s.io/client-go/kubernetes/typed/coordination/v1"
-	v1alpha13 "k8s.io/client-go/kubernetes/typed/coordination/v1alpha1"
 	v1beta15 "k8s.io/client-go/kubernetes/typed/coordination/v1beta1"
 	v111 "k8s.io/client-go/kubernetes/typed/core/v1"
 	v112 "k8s.io/client-go/kubernetes/typed/discovery/v1"
@@ -62,7 +61,6 @@ import (
 	v118 "k8s.io/client-go/kubernetes/typed/rbac/v1"
 	v1alpha16 "k8s.io/client-go/kubernetes/typed/rbac/v1alpha1"
 	v1beta113 "k8s.io/client-go/kubernetes/typed/rbac/v1beta1"
-	v1alpha3 "k8s.io/client-go/kubernetes/typed/resource/v1alpha3"
 	v119 "k8s.io/client-go/kubernetes/typed/scheduling/v1"
 	v1alpha17 "k8s.io/client-go/kubernetes/typed/scheduling/v1alpha1"
 	v1beta114 "k8s.io/client-go/kubernetes/typed/scheduling/v1beta1"
@@ -658,12 +656,6 @@ func (_mr *_MockKubevirtClientRecorder) CertificatesV1alpha1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CertificatesV1alpha1")
 }
 
-func (_m *MockKubevirtClient) CoordinationV1alpha1() v1alpha13.CoordinationV1alpha1Interface {
-	ret := _m.ctrl.Call(_m, "CoordinationV1alpha1")
-	ret0, _ := ret[0].(v1alpha13.CoordinationV1alpha1Interface)
-	return ret0
-}
-
 func (_mr *_MockKubevirtClientRecorder) CoordinationV1alpha1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CoordinationV1alpha1")
 }
@@ -896,16 +888,6 @@ func (_m *MockKubevirtClient) RbacV1alpha1() v1alpha16.RbacV1alpha1Interface {
 
 func (_mr *_MockKubevirtClientRecorder) RbacV1alpha1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RbacV1alpha1")
-}
-
-func (_m *MockKubevirtClient) ResourceV1alpha3() v1alpha3.ResourceV1alpha3Interface {
-	ret := _m.ctrl.Call(_m, "ResourceV1alpha3")
-	ret0, _ := ret[0].(v1alpha3.ResourceV1alpha3Interface)
-	return ret0
-}
-
-func (_mr *_MockKubevirtClientRecorder) ResourceV1alpha3() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "ResourceV1alpha3")
 }
 
 func (_m *MockKubevirtClient) SchedulingV1alpha1() v1alpha17.SchedulingV1alpha1Interface {
