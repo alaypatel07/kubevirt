@@ -6212,9 +6212,7 @@ var CRDsValidation map[string]string = map[string]string{
                                     type: object
                                 type: object
                             required:
-                            - claimName
                             - name
-                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -6244,9 +6242,7 @@ var CRDsValidation map[string]string = map[string]string{
                                   via config drive
                                 type: string
                             required:
-                            - claimName
                             - name
-                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -8985,9 +8981,7 @@ var CRDsValidation map[string]string = map[string]string{
                     type: object
                 type: object
             required:
-            - claimName
             - name
-            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -9015,9 +9009,7 @@ var CRDsValidation map[string]string = map[string]string{
                   its tag will be provided to the guest via config drive
                 type: string
             required:
-            - claimName
             - name
-            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -11600,9 +11592,7 @@ var CRDsValidation map[string]string = map[string]string{
                             type: object
                         type: object
                     required:
-                    - claimName
                     - name
-                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -11631,9 +11621,7 @@ var CRDsValidation map[string]string = map[string]string{
                           and its tag will be provided to the guest via config drive
                         type: string
                     required:
-                    - claimName
                     - name
-                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -14975,9 +14963,7 @@ var CRDsValidation map[string]string = map[string]string{
                             type: object
                         type: object
                     required:
-                    - claimName
                     - name
-                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -15006,9 +14992,7 @@ var CRDsValidation map[string]string = map[string]string{
                           and its tag will be provided to the guest via config drive
                         type: string
                     required:
-                    - claimName
                     - name
-                    - requestName
                     type: object
                   type: array
                   x-kubernetes-list-type: atomic
@@ -17416,9 +17400,7 @@ var CRDsValidation map[string]string = map[string]string{
                                     type: object
                                 type: object
                             required:
-                            - claimName
                             - name
-                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -17448,9 +17430,7 @@ var CRDsValidation map[string]string = map[string]string{
                                   via config drive
                                 type: string
                             required:
-                            - claimName
                             - name
-                            - requestName
                             type: object
                           type: array
                           x-kubernetes-list-type: atomic
@@ -19469,9 +19449,7 @@ var CRDsValidation map[string]string = map[string]string{
                     type: object
                 type: object
             required:
-            - claimName
             - name
-            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -19499,9 +19477,7 @@ var CRDsValidation map[string]string = map[string]string{
                   its tag will be provided to the guest via config drive
                 type: string
             required:
-            - claimName
             - name
-            - requestName
             type: object
           type: array
           x-kubernetes-list-type: atomic
@@ -22012,9 +21988,7 @@ var CRDsValidation map[string]string = map[string]string{
                                             type: object
                                         type: object
                                     required:
-                                    - claimName
                                     - name
-                                    - requestName
                                     type: object
                                   type: array
                                   x-kubernetes-list-type: atomic
@@ -22045,9 +22019,7 @@ var CRDsValidation map[string]string = map[string]string{
                                           to the guest via config drive
                                         type: string
                                     required:
-                                    - claimName
                                     - name
-                                    - requestName
                                     type: object
                                   type: array
                                   x-kubernetes-list-type: atomic
@@ -27283,9 +27255,7 @@ var CRDsValidation map[string]string = map[string]string{
                                                 type: object
                                             type: object
                                         required:
-                                        - claimName
                                         - name
-                                        - requestName
                                         type: object
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -27317,9 +27287,7 @@ var CRDsValidation map[string]string = map[string]string{
                                               drive
                                             type: string
                                         required:
-                                        - claimName
                                         - name
-                                        - requestName
                                         type: object
                                       type: array
                                       x-kubernetes-list-type: atomic

@@ -18060,7 +18060,6 @@ func schema_kubevirtio_api_core_v1_ClaimRequest(ref common.ReferenceCallback) co
 					"claimName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -18068,13 +18067,11 @@ func schema_kubevirtio_api_core_v1_ClaimRequest(ref common.ReferenceCallback) co
 					"requestName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 				},
-				Required: []string{"claimName", "requestName"},
 			},
 		},
 	}
@@ -19045,7 +19042,6 @@ func schema_kubevirtio_api_core_v1_DeviceSource(ref common.ReferenceCallback) co
 					"claimName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -19053,13 +19049,11 @@ func schema_kubevirtio_api_core_v1_DeviceSource(ref common.ReferenceCallback) co
 					"requestName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 				},
-				Required: []string{"claimName", "requestName"},
 			},
 		},
 	}
@@ -20320,7 +20314,6 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 					"claimName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -20328,7 +20321,6 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 					"requestName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -20346,7 +20338,7 @@ func schema_kubevirtio_api_core_v1_GPU(ref common.ReferenceCallback) common.Open
 						},
 					},
 				},
-				Required: []string{"name", "claimName", "requestName"},
+				Required: []string{"name"},
 			},
 		},
 		Dependencies: []string{
@@ -20540,7 +20532,6 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 					"claimName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -20548,7 +20539,6 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 					"requestName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -20561,7 +20551,7 @@ func schema_kubevirtio_api_core_v1_HostDevice(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"name", "claimName", "requestName"},
+				Required: []string{"name"},
 			},
 		},
 	}

@@ -13982,15 +13982,12 @@
    "v1.GPU": {
     "type": "object",
     "required": [
-     "name",
-     "claimName",
-     "requestName"
+     "name"
     ],
     "properties": {
      "claimName": {
       "description": "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
-      "type": "string",
-      "default": ""
+      "type": "string"
      },
      "deviceName": {
       "description": "DeviceName is the name of the device provisioned by device-plugins",
@@ -14003,8 +14000,7 @@
      },
      "requestName": {
       "description": "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
-      "type": "string",
-      "default": ""
+      "type": "string"
      },
      "tag": {
       "description": "If specified, the virtual network interface address and its tag will be provided to the guest via config drive",
@@ -14092,15 +14088,12 @@
    "v1.HostDevice": {
     "type": "object",
     "required": [
-     "name",
-     "claimName",
-     "requestName"
+     "name"
     ],
     "properties": {
      "claimName": {
       "description": "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
-      "type": "string",
-      "default": ""
+      "type": "string"
      },
      "deviceName": {
       "description": "DeviceName is the name of the device provisioned by device-plugins",
@@ -14112,8 +14105,7 @@
      },
      "requestName": {
       "description": "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
-      "type": "string",
-      "default": ""
+      "type": "string"
      },
      "tag": {
       "description": "If specified, the virtual network interface address and its tag will be provided to the guest via config drive",

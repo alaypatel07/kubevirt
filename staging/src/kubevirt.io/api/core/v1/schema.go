@@ -607,16 +607,16 @@ type DeviceSource struct {
 	// ClaimRequest provides the ClaimName from vmi.spec.resourceClaims[].name and
 	// requestName from resourceClaim.spec.devices.requests[].name
 	// this fields requires DRA feature gate enabled
-	ClaimRequest *ClaimRequest `json:",inline,omitempty"`
+	ClaimRequest *ClaimRequest `json:",inline"`
 }
 
 type ClaimRequest struct {
 	// ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
 	// device is allocated
-	ClaimName string `json:"claimName"`
+	ClaimName string `json:"claimName,omitempty"`
 	// RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
 	// device is requested
-	RequestName string `json:"requestName"`
+	RequestName string `json:"requestName,omitempty"`
 }
 
 type VGPUOptions struct {
