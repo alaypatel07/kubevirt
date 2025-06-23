@@ -196,3 +196,11 @@ func (config *ClusterConfig) SecureExecutionEnabled() bool {
 func (config *ClusterConfig) PanicDevicesEnabled() bool {
 	return config.isFeatureGateEnabled(featuregate.PanicDevicesGate)
 }
+
+func (config *ClusterConfig) GPUsWithDRAGateEnabled() bool {
+	return config.isFeatureGateEnabled(featuregate.GPUsWithDRAGate)
+}
+
+func (config *ClusterConfig) HostDevicesWithDRAEnabled() bool {
+	return config.isFeatureGateEnabled(featuregate.HostDevicesWithDRAGate)
+}
