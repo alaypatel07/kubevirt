@@ -21,6 +21,7 @@ package utils
 
 import (
 	"fmt"
+	resourcev1beta1 "k8s.io/api/resource/v1beta1"
 	"os"
 	"strings"
 
@@ -73,6 +74,7 @@ const (
 	VmiGPU                      = "vmi-gpu"
 	VmiARM                      = "vmi-arm"
 	VmiUSB                      = "vmi-usb"
+	VmiDRAGPU                   = "vmi-dra-pgpu"
 	VmTemplateFedora            = "vm-template-fedora"
 	VmTemplateRHEL7             = "vm-template-rhel7"
 	VmTemplateWindows           = "vm-template-windows2012r2"
@@ -115,6 +117,10 @@ const VmiPresetSmall = "vmi-preset-small"
 const VmiMigration = "migration-job"
 
 const MigrationPolicyName = "example-migration-policy"
+
+const ResourceClaimTemplatePGPU = "pgpu-resource-claim-tmpl"
+
+const DRARequestName = "pgpu"
 
 const (
 	imageAlpine     = "alpine-container-disk-demo"
@@ -962,6 +968,56 @@ func GetVMIGPU() *v1.VirtualMachineInstance {
 		},
 	}
 	vmi.Spec.Domain.Devices.GPUs = GPUs
+	initFedora(&vmi.Spec)
+	addNoCloudDiskWitUserData(&vmi.Spec, generateCloudConfigString(cloudConfigUserPassword))
+	return vmi
+}
+
+func GetResourceClaimTemplatePGPU() *resourcev1beta1.ResourceClaimTemplate {
+	return &resourcev1beta1.ResourceClaimTemplate{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: resourcev1beta1.SchemeGroupVersion.String(),
+			Kind:       "ResourceClaimTemplate",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: ResourceClaimTemplatePGPU,
+		},
+		Spec: resourcev1beta1.ResourceClaimTemplateSpec{
+			Spec: resourcev1beta1.ResourceClaimSpec{
+				Devices: resourcev1beta1.DeviceClaim{
+					Requests: []resourcev1beta1.DeviceRequest{
+						{
+							Name:            DRARequestName,
+							DeviceClassName: "gpu.example.com",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func GetVMIDRAGPU() *v1.VirtualMachineInstance {
+	vmi := getBaseVMI(VmiDRAGPU)
+	claimName := "pgpu-resource-claim"
+	vmi.Spec.Domain.Memory.Guest = pointer.P(resource.MustParse("1024M"))
+	vmi.Spec.ResourceClaims = []k8sv1.PodResourceClaim{
+		{
+			Name:                      claimName,
+			ResourceClaimTemplateName: pointer.P(ResourceClaimTemplatePGPU),
+		},
+	}
+
+	vmi.Spec.Domain.Devices.GPUs = []v1.GPU{
+		{
+			Name: "example-gpu",
+			ClaimRequest: &v1.ClaimRequest{
+				ClaimName:   &claimName,
+				RequestName: pointer.P(DRARequestName),
+			},
+		},
+	}
+
 	initFedora(&vmi.Spec)
 	addNoCloudDiskWitUserData(&vmi.Spec, generateCloudConfigString(cloudConfigUserPassword))
 	return vmi
