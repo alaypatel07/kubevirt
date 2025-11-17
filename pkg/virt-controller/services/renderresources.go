@@ -210,6 +210,45 @@ func WithHostDevicesDRA(hostDevices []v1.HostDevice) ResourceRendererOption {
 	}
 }
 
+// WithCPUDRA adds ResourceClaims for CPU provisioned via DRA.
+// For auto mode, the claim reference is auto-generated based on the VMI name.
+// For manual mode, the claim is referenced from cpu.dra.claimRef.
+// Note: This function adds container-level claims that reference pod-level claims.
+// The pod-level claims must be added to vmi.Spec.ResourceClaims separately.
+func WithCPUDRA(vmiName string, cpu *v1.CPU) ResourceRendererOption {
+	return func(r *ResourceRenderer) {
+		if cpu == nil || cpu.DRA == nil {
+			return
+		}
+
+		resources := r.ResourceRequirements()
+
+		if cpu.DRA.Auto {
+			// Auto mode: reference the pod-level claim that was injected into vmi.Spec.ResourceClaims
+			claimRefName := fmt.Sprintf("%s-cpu-claim-ref", vmiName)
+			requestResourceClaims(&resources, &k8sv1.ResourceClaim{
+				Name:    claimRefName,
+				Request: "", // Empty string means use all devices from the claim
+			})
+		} else if cpu.DRA.ClaimRequest != nil && cpu.DRA.ClaimRequest.ClaimName != nil {
+			// Manual mode: use user-provided claim reference
+			requestName := ""
+			if cpu.DRA.ClaimRequest.RequestName != nil {
+				requestName = *cpu.DRA.ClaimRequest.RequestName
+			}
+			requestResourceClaims(&resources, &k8sv1.ResourceClaim{
+				Name:    *cpu.DRA.ClaimRequest.ClaimName,
+				Request: requestName,
+			})
+		}
+
+		// Note: CPU requests/limits are still set by other renderer options (WithCPUPinning or WithoutDedicatedCPU)
+		// DRA claims are added ON TOP of traditional requests/limits for topology-aware allocation
+
+		copyResourceClaims(&resources, &r.resourceClaims)
+	}
+}
+
 func WithHugePages(vmMemory *v1.Memory, memoryOverhead resource.Quantity) ResourceRendererOption {
 	return func(renderer *ResourceRenderer) {
 		hugepageType := k8sv1.ResourceName(k8sv1.ResourceHugePagesPrefix + vmMemory.Hugepages.PageSize)

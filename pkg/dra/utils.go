@@ -97,3 +97,28 @@ func IsGPUDRA(gpu v1.GPU) bool {
 func IsHostDeviceDRA(hd v1.HostDevice) bool {
 	return hd.DeviceName == "" && hd.ClaimRequest != nil
 }
+
+// IsCPUDRA returns true if the VMI uses CPU DRA (either auto or manual)
+func IsCPUDRA(vmi *v1.VirtualMachineInstance) bool {
+	if vmi == nil || vmi.Spec.Domain.CPU == nil || vmi.Spec.Domain.CPU.DRA == nil {
+		return false
+	}
+	cpu := vmi.Spec.Domain.CPU
+	return cpu.DRA.Auto || cpu.DRA.ClaimRequest != nil
+}
+
+// IsCPUDRAAuto returns true if the VMI uses auto-generated CPU DRA
+func IsCPUDRAAuto(vmi *v1.VirtualMachineInstance) bool {
+	if vmi == nil || vmi.Spec.Domain.CPU == nil || vmi.Spec.Domain.CPU.DRA == nil {
+		return false
+	}
+	return vmi.Spec.Domain.CPU.DRA.Auto
+}
+
+// IsCPUDRAManual returns true if the VMI uses manually configured CPU DRA
+func IsCPUDRAManual(vmi *v1.VirtualMachineInstance) bool {
+	if vmi == nil || vmi.Spec.Domain.CPU == nil || vmi.Spec.Domain.CPU.DRA == nil {
+		return false
+	}
+	return vmi.Spec.Domain.CPU.DRA.ClaimRequest != nil
+}

@@ -61,6 +61,7 @@ import (
 	"kubevirt.io/kubevirt/pkg/util/net/dns"
 	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
 	"kubevirt.io/kubevirt/pkg/virt-controller/watch/descheduler"
+	"kubevirt.io/kubevirt/pkg/virt-controller/watch/dra"
 	"kubevirt.io/kubevirt/pkg/virt-controller/watch/topology"
 	"kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/api"
 	operatorutil "kubevirt.io/kubevirt/pkg/virt-operator/util"
@@ -335,6 +336,15 @@ func (t *TemplateService) renderLaunchManifest(vmi *v1.VirtualMachineInstance, i
 	precond.MustNotBeNil(vmi)
 	domain := precond.MustNotBeEmpty(vmi.GetObjectMeta().GetName())
 	namespace := precond.MustNotBeEmpty(vmi.GetObjectMeta().GetNamespace())
+
+	// Inject CPU ResourceClaim for auto mode if enabled
+	if t.clusterConfig.CPUsWithDRAGateEnabled() && drautil.IsCPUDRAAuto(vmi) {
+		// Note: We import the dra package to access InjectCPUResourceClaim
+		// This will create the ResourceClaim and add a reference to vmi.Spec.ResourceClaims
+		if err := dra.InjectCPUResourceClaim(vmi, t.virtClient); err != nil {
+			return nil, fmt.Errorf("failed to inject CPU ResourceClaim: %v", err)
+		}
+	}
 
 	var userId int64 = util.RootUser
 
@@ -1550,8 +1560,13 @@ func (t *TemplateService) VMIResourcePredicates(vmi *v1.VirtualMachineInstance, 
 		resourceRules: []VMIResourceRule{
 			// Run overcommit first to avoid overcommitting overhead memory
 			NewVMIResourceRule(emptyMemoryRequest, WithMemoryRequests(vmi.Spec.Domain.Memory, t.clusterConfig.GetMemoryOvercommit())),
+			// CPU resources: always set requests/limits (needed for both traditional and DRA modes)
 			NewVMIResourceRule(doesVMIRequireDedicatedCPU, WithCPUPinning(vmi, vmi.Annotations, additionalCPUs)),
 			NewVMIResourceRule(not(doesVMIRequireDedicatedCPU), WithoutDedicatedCPU(vmi, t.clusterConfig.GetCPUAllocationRatio(), withCPULimits)),
+			// CPU DRA: add ResourceClaims on top of traditional requests/limits
+			NewVMIResourceRule(func(vmi *v1.VirtualMachineInstance) bool {
+				return t.clusterConfig.CPUsWithDRAGateEnabled() && isCPUVMIDRA(vmi)
+			}, WithCPUDRA(vmi.Name, vmi.Spec.Domain.CPU)),
 			NewVMIResourceRule(hasHugePages, WithHugePages(vmi.Spec.Domain.Memory, memoryOverhead)),
 			NewVMIResourceRule(not(hasHugePages), WithMemoryOverhead(vmi.Spec.Domain.Resources, memoryOverhead)),
 			NewVMIResourceRule(t.doesVMIRequireAutoMemoryLimits, WithAutoMemoryLimits(vmi.Namespace, t.namespaceStore)),
@@ -1670,6 +1685,11 @@ func isGPUVMIDRA(vmi *v1.VirtualMachineInstance) bool {
 		}
 	}
 	return false
+}
+
+// isCPUVMIDRA checks if a VMI has CPU DRA enabled
+func isCPUVMIDRA(vmi *v1.VirtualMachineInstance) bool {
+	return drautil.IsCPUDRA(vmi)
 }
 
 // isHostDevVMIDevicePlugins checks if a VMI has any HostDevices configured for device plugins
