@@ -2003,6 +2003,125 @@ var _ = Describe("Validating VMICreate Admitter", func() {
 		})
 	})
 
+	Context("with CPU DRA", func() {
+		var vmi *v1.VirtualMachineInstance
+
+		BeforeEach(func() {
+			vmi = api.NewMinimalVMI("testvmi")
+		})
+
+		It("should accept CPU DRA with auto enabled and topology specified", func() {
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				Cores:   2,
+				Sockets: 2,
+				Threads: 2,
+				DRA: &v1.CPUDRASource{
+					Auto: true,
+				},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(BeEmpty())
+		})
+
+		It("should accept CPU DRA with claimName referencing an existing claim", func() {
+			claimName := "test-claim"
+			vmi.Spec.ResourceClaims = []k8sv1.PodResourceClaim{
+				{
+					Name: claimName,
+				},
+			}
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				Cores:   2,
+				Sockets: 2,
+				DRA: &v1.CPUDRASource{
+					ClaimRequest: &v1.ClaimRequest{
+						ClaimName: &claimName,
+					},
+				},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(BeEmpty())
+		})
+
+		It("should reject CPU DRA with both auto and claimName set", func() {
+			claimName := "test-claim"
+			vmi.Spec.ResourceClaims = []k8sv1.PodResourceClaim{
+				{
+					Name: claimName,
+				},
+			}
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				Cores:   2,
+				Sockets: 2,
+				DRA: &v1.CPUDRASource{
+					Auto: true,
+					ClaimRequest: &v1.ClaimRequest{
+						ClaimName: &claimName,
+					},
+				},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(HaveLen(1))
+			Expect(causes[0].Type).To(Equal(metav1.CauseTypeFieldValueInvalid))
+			Expect(causes[0].Field).To(Equal("fake.domain.cpu.dra"))
+			Expect(causes[0].Message).To(ContainSubstring("mutually exclusive"))
+		})
+
+		It("should accept CPU DRA with neither auto nor claimName set (falls back to legacy)", func() {
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				Cores: 2,
+				DRA:   &v1.CPUDRASource{},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(BeEmpty())
+		})
+
+		It("should reject CPU DRA with auto but no topology specified", func() {
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				DRA: &v1.CPUDRASource{
+					Auto: true,
+				},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(HaveLen(1))
+			Expect(causes[0].Type).To(Equal(metav1.CauseTypeFieldValueInvalid))
+			Expect(causes[0].Field).To(Equal("fake.domain.cpu.dra.auto"))
+			Expect(causes[0].Message).To(ContainSubstring("requires cpu.cores"))
+		})
+
+		It("should reject CPU DRA with DedicatedCPUPlacement", func() {
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				Cores:                 2,
+				DedicatedCPUPlacement: true,
+				DRA: &v1.CPUDRASource{
+					Auto: true,
+				},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(HaveLen(1))
+			Expect(causes[0].Type).To(Equal(metav1.CauseTypeFieldValueInvalid))
+			Expect(causes[0].Field).To(Equal("fake.domain.cpu.dra"))
+			Expect(causes[0].Message).To(ContainSubstring("mutually exclusive"))
+		})
+
+		It("should reject CPU DRA with claimName not in spec.resourceClaims", func() {
+			claimName := "nonexistent-claim"
+			vmi.Spec.Domain.CPU = &v1.CPU{
+				Cores: 2,
+				DRA: &v1.CPUDRASource{
+					ClaimRequest: &v1.ClaimRequest{
+						ClaimName: &claimName,
+					},
+				},
+			}
+			causes := ValidateVirtualMachineInstanceSpec(k8sfield.NewPath("fake"), &vmi.Spec, config)
+			Expect(causes).To(HaveLen(1))
+			Expect(causes[0].Type).To(Equal(metav1.CauseTypeFieldValueNotFound))
+			Expect(causes[0].Field).To(Equal("fake.domain.cpu.dra.claimName"))
+			Expect(causes[0].Message).To(ContainSubstring("not found in spec.resourceClaims"))
+		})
+	})
+
 	Context("with downwardmetrics virtio serial", func() {
 		var vmi *v1.VirtualMachineInstance
 		validate := func() []metav1.StatusCause {

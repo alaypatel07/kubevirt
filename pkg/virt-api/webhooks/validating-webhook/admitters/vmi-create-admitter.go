@@ -189,6 +189,7 @@ func ValidateVirtualMachineInstanceSpec(field *k8sfield.Path, spec *v1.VirtualMa
 	causes = append(causes, validateCpuPinning(field, spec, config)...)
 	causes = append(causes, validateNUMA(field, spec, config)...)
 	causes = append(causes, validateCPUIsolatorThread(field, spec)...)
+	causes = append(causes, validateCPUDRA(field, spec)...)
 	causes = append(causes, validateCPUFeaturePolicies(field, spec)...)
 	causes = append(causes, validateCPUHotplug(field, spec)...)
 	causes = append(causes, validateStartStrategy(field, spec)...)
@@ -695,6 +696,75 @@ func validateCpuPinning(field *k8sfield.Path, spec *v1.VirtualMachineInstanceSpe
 		causes = append(causes, validateThreadCountOnArchitecture(field, spec, config)...)
 		causes = append(causes, validateThreadCountOnDedicatedCPUPlacement(field, spec)...)
 	}
+	return causes
+}
+
+func validateCPUDRA(field *k8sfield.Path, spec *v1.VirtualMachineInstanceSpec) []metav1.StatusCause {
+	var causes []metav1.StatusCause
+
+	if spec.Domain.CPU == nil || spec.Domain.CPU.DRA == nil {
+		return causes
+	}
+
+	dra := spec.Domain.CPU.DRA
+	dedicatedCPU := spec.Domain.CPU.DedicatedCPUPlacement
+
+	// Check mutual exclusivity: DRA cannot be used with DedicatedCPUPlacement
+	if dedicatedCPU {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "cpu.dra cannot be used with cpu.dedicatedCpuPlacement; they are mutually exclusive",
+			Field:   field.Child("domain", "cpu", "dra").String(),
+		})
+		return causes
+	}
+
+	// Check mutual exclusivity: Auto and ClaimRequest cannot both be set
+	if dra.Auto && dra.ClaimRequest != nil && (dra.ClaimRequest.ClaimName != nil || dra.ClaimRequest.RequestName != nil) {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "cpu.dra.auto and cpu.dra.claimName/requestName are mutually exclusive; only one can be specified",
+			Field:   field.Child("domain", "cpu", "dra").String(),
+		})
+		return causes
+	}
+
+	// If neither Auto nor ClaimRequest is set, fall back to legacy mechanism (no validation needed)
+	if !dra.Auto && (dra.ClaimRequest == nil || (dra.ClaimRequest.ClaimName == nil && dra.ClaimRequest.RequestName == nil)) {
+		return causes
+	}
+
+	// If Auto is enabled, validate CPU topology is specified
+	if dra.Auto {
+		vCPUs := hwutil.GetNumberOfVCPUs(spec.Domain.CPU)
+		if vCPUs == 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "cpu.dra.auto requires cpu.cores, cpu.sockets, and/or cpu.threads to be specified",
+				Field:   field.Child("domain", "cpu", "dra", "auto").String(),
+			})
+		}
+	}
+
+	// If ClaimRequest is set, validate the claim exists in spec.resourceClaims
+	if dra.ClaimRequest != nil && dra.ClaimRequest.ClaimName != nil {
+		claimName := *dra.ClaimRequest.ClaimName
+		found := false
+		for _, claim := range spec.ResourceClaims {
+			if claim.Name == claimName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotFound,
+				Message: fmt.Sprintf("cpu.dra.claimName '%s' not found in spec.resourceClaims", claimName),
+				Field:   field.Child("domain", "cpu", "dra", "claimName").String(),
+			})
+		}
+	}
+
 	return causes
 }
 
