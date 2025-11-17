@@ -414,6 +414,10 @@ spec:
         cpu:
           cores: 4294967291
           dedicatedCpuPlacement: true
+          dra:
+            auto: true
+            claimName: claimNameValue
+            requestName: requestNameValue
           features:
           - name: nameValue
             policy: policyValue

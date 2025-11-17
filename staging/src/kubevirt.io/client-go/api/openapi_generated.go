@@ -349,6 +349,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubevirt.io/api/core/v1.Bootloader":                                                              schema_kubevirtio_api_core_v1_Bootloader(ref),
 		"kubevirt.io/api/core/v1.CDRomTarget":                                                             schema_kubevirtio_api_core_v1_CDRomTarget(ref),
 		"kubevirt.io/api/core/v1.CPU":                                                                     schema_kubevirtio_api_core_v1_CPU(ref),
+		"kubevirt.io/api/core/v1.CPUDRASource":                                                            schema_kubevirtio_api_core_v1_CPUDRASource(ref),
 		"kubevirt.io/api/core/v1.CPUFeature":                                                              schema_kubevirtio_api_core_v1_CPUFeature(ref),
 		"kubevirt.io/api/core/v1.CPUTopology":                                                             schema_kubevirtio_api_core_v1_CPUTopology(ref),
 		"kubevirt.io/api/core/v1.CertConfig":                                                              schema_kubevirtio_api_core_v1_CertConfig(ref),
@@ -18397,11 +18398,51 @@ func schema_kubevirtio_api_core_v1_CPU(ref common.ReferenceCallback) common.Open
 							Ref:         ref("kubevirt.io/api/core/v1.Realtime"),
 						},
 					},
+					"dra": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DRA enables Dynamic Resource Allocation for CPU resources. This field should only be configured if the feature-gate CPUWithDRA is enabled. This feature is in alpha.",
+							Ref:         ref("kubevirt.io/api/core/v1.CPUDRASource"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"kubevirt.io/api/core/v1.CPUFeature", "kubevirt.io/api/core/v1.NUMA", "kubevirt.io/api/core/v1.Realtime"},
+			"kubevirt.io/api/core/v1.CPUDRASource", "kubevirt.io/api/core/v1.CPUFeature", "kubevirt.io/api/core/v1.NUMA", "kubevirt.io/api/core/v1.Realtime"},
+	}
+}
+
+func schema_kubevirtio_api_core_v1_CPUDRASource(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "CPUDRASource configures Dynamic Resource Allocation for CPU resources. Either Auto or ClaimRequest must be specified, but not both.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"auto": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Auto enables auto-generation of a ResourceClaim from the CPU topology specification (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim with proper topology constraints.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"claimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this device is allocated",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requestName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this device is requested",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

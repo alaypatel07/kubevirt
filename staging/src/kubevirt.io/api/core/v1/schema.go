@@ -350,6 +350,12 @@ type CPU struct {
 	// Realtime instructs the virt-launcher to tune the VMI for lower latency, optional for real time workloads
 	// +optional
 	Realtime *Realtime `json:"realtime,omitempty"`
+
+	// DRA enables Dynamic Resource Allocation for CPU resources.
+	// This field should only be configured if the feature-gate CPUWithDRA is enabled.
+	// This feature is in alpha.
+	// +optional
+	DRA *CPUDRASource `json:"dra,omitempty"`
 }
 
 // Realtime holds the tuning knobs specific for realtime workloads.
@@ -358,6 +364,21 @@ type Realtime struct {
 	// Example: "0-3,^1","0,2,3","2-3"
 	// +optional
 	Mask string `json:"mask,omitempty"`
+}
+
+// CPUDRASource configures Dynamic Resource Allocation for CPU resources.
+// Either Auto or ClaimRequest must be specified, but not both.
+type CPUDRASource struct {
+	// Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+	// (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+	// with proper topology constraints.
+	// +optional
+	Auto bool `json:"auto,omitempty"`
+
+	// ClaimRequest references a manually created ResourceClaim for advanced scenarios
+	// (e.g., NUMA-aligned CPU+GPU+NIC allocations).
+	// +optional
+	*ClaimRequest `json:",inline"`
 }
 
 // NUMAGuestMappingPassthrough instructs kubevirt to model numa topology which is compatible with the CPU pinning on the guest.

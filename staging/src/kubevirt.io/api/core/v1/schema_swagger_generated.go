@@ -168,6 +168,7 @@ func (CPU) SwaggerDoc() map[string]string {
 		"numa":                  "NUMA allows specifying settings for the guest NUMA topology\n+optional",
 		"isolateEmulatorThread": "IsolateEmulatorThread requests one more dedicated pCPU to be allocated for the VMI to place\nthe emulator thread on it.\n+optional",
 		"realtime":              "Realtime instructs the virt-launcher to tune the VMI for lower latency, optional for real time workloads\n+optional",
+		"dra":                   "DRA enables Dynamic Resource Allocation for CPU resources.\nThis field should only be configured if the feature-gate CPUWithDRA is enabled.\nThis feature is in alpha.\n+optional",
 	}
 }
 
@@ -175,6 +176,13 @@ func (Realtime) SwaggerDoc() map[string]string {
 	return map[string]string{
 		"":     "Realtime holds the tuning knobs specific for realtime workloads.",
 		"mask": "Mask defines the vcpu mask expression that defines which vcpus are used for realtime. Format matches libvirt's expressions.\nExample: \"0-3,^1\",\"0,2,3\",\"2-3\"\n+optional",
+	}
+}
+
+func (CPUDRASource) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"":     "CPUDRASource configures Dynamic Resource Allocation for CPU resources.\nEither Auto or ClaimRequest must be specified, but not both.",
+		"auto": "Auto enables auto-generation of a ResourceClaim from the CPU topology specification\n(cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim\nwith proper topology constraints.\n+optional",
 	}
 }
 

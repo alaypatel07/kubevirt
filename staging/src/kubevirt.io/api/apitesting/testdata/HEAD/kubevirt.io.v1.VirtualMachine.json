@@ -134,6 +134,11 @@
             "isolateEmulatorThread": true,
             "realtime": {
               "mask": "maskValue"
+            },
+            "dra": {
+              "auto": true,
+              "claimName": "claimNameValue",
+              "requestName": "requestNameValue"
             }
           },
           "memory": {

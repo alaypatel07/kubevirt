@@ -6016,6 +6016,29 @@ var CRDsValidation map[string]string = map[string]string{
                             DedicatedCPUPlacement requests the scheduler to place the VirtualMachineInstance on a node
                             with enough dedicated pCPUs and pin the vCPUs to it.
                           type: boolean
+                        dra:
+                          description: |-
+                            DRA enables Dynamic Resource Allocation for CPU resources.
+                            This field should only be configured if the feature-gate CPUWithDRA is enabled.
+                            This feature is in alpha.
+                          properties:
+                            auto:
+                              description: |-
+                                Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+                                (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+                                with proper topology constraints.
+                              type: boolean
+                            claimName:
+                              description: |-
+                                ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                device is allocated
+                              type: string
+                            requestName:
+                              description: |-
+                                RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                device is requested
+                              type: string
+                          type: object
                         features:
                           description: Features specifies the CPU features list inside
                             the VMI.
@@ -11542,6 +11565,29 @@ var CRDsValidation map[string]string = map[string]string{
                     DedicatedCPUPlacement requests the scheduler to place the VirtualMachineInstance on a node
                     with enough dedicated pCPUs and pin the vCPUs to it.
                   type: boolean
+                dra:
+                  description: |-
+                    DRA enables Dynamic Resource Allocation for CPU resources.
+                    This field should only be configured if the feature-gate CPUWithDRA is enabled.
+                    This feature is in alpha.
+                  properties:
+                    auto:
+                      description: |-
+                        Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+                        (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+                        with proper topology constraints.
+                      type: boolean
+                    claimName:
+                      description: |-
+                        ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                        device is allocated
+                      type: string
+                    requestName:
+                      description: |-
+                        RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                        device is requested
+                      type: string
+                  type: object
                 features:
                   description: Features specifies the CPU features list inside the
                     VMI.
@@ -15311,6 +15357,29 @@ var CRDsValidation map[string]string = map[string]string{
                     DedicatedCPUPlacement requests the scheduler to place the VirtualMachineInstance on a node
                     with enough dedicated pCPUs and pin the vCPUs to it.
                   type: boolean
+                dra:
+                  description: |-
+                    DRA enables Dynamic Resource Allocation for CPU resources.
+                    This field should only be configured if the feature-gate CPUWithDRA is enabled.
+                    This feature is in alpha.
+                  properties:
+                    auto:
+                      description: |-
+                        Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+                        (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+                        with proper topology constraints.
+                      type: boolean
+                    claimName:
+                      description: |-
+                        ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                        device is allocated
+                      type: string
+                    requestName:
+                      description: |-
+                        RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                        device is requested
+                      type: string
+                  type: object
                 features:
                   description: Features specifies the CPU features list inside the
                     VMI.
@@ -17794,6 +17863,29 @@ var CRDsValidation map[string]string = map[string]string{
                             DedicatedCPUPlacement requests the scheduler to place the VirtualMachineInstance on a node
                             with enough dedicated pCPUs and pin the vCPUs to it.
                           type: boolean
+                        dra:
+                          description: |-
+                            DRA enables Dynamic Resource Allocation for CPU resources.
+                            This field should only be configured if the feature-gate CPUWithDRA is enabled.
+                            This feature is in alpha.
+                          properties:
+                            auto:
+                              description: |-
+                                Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+                                (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+                                with proper topology constraints.
+                              type: boolean
+                            claimName:
+                              description: |-
+                                ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                device is allocated
+                              type: string
+                            requestName:
+                              description: |-
+                                RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                device is requested
+                              type: string
+                          type: object
                         features:
                           description: Features specifies the CPU features list inside
                             the VMI.
@@ -22771,6 +22863,29 @@ var CRDsValidation map[string]string = map[string]string{
                                     DedicatedCPUPlacement requests the scheduler to place the VirtualMachineInstance on a node
                                     with enough dedicated pCPUs and pin the vCPUs to it.
                                   type: boolean
+                                dra:
+                                  description: |-
+                                    DRA enables Dynamic Resource Allocation for CPU resources.
+                                    This field should only be configured if the feature-gate CPUWithDRA is enabled.
+                                    This feature is in alpha.
+                                  properties:
+                                    auto:
+                                      description: |-
+                                        Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+                                        (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+                                        with proper topology constraints.
+                                      type: boolean
+                                    claimName:
+                                      description: |-
+                                        ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                        device is allocated
+                                      type: string
+                                    requestName:
+                                      description: |-
+                                        RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                        device is requested
+                                      type: string
+                                  type: object
                                 features:
                                   description: Features specifies the CPU features
                                     list inside the VMI.
@@ -28198,6 +28313,29 @@ var CRDsValidation map[string]string = map[string]string{
                                         DedicatedCPUPlacement requests the scheduler to place the VirtualMachineInstance on a node
                                         with enough dedicated pCPUs and pin the vCPUs to it.
                                       type: boolean
+                                    dra:
+                                      description: |-
+                                        DRA enables Dynamic Resource Allocation for CPU resources.
+                                        This field should only be configured if the feature-gate CPUWithDRA is enabled.
+                                        This feature is in alpha.
+                                      properties:
+                                        auto:
+                                          description: |-
+                                            Auto enables auto-generation of a ResourceClaim from the CPU topology specification
+                                            (cores, sockets, threads). When enabled, KubeVirt will automatically create a ResourceClaim
+                                            with proper topology constraints.
+                                          type: boolean
+                                        claimName:
+                                          description: |-
+                                            ClaimName needs to be provided from the list vmi.spec.resourceClaims[].name where this
+                                            device is allocated
+                                          type: string
+                                        requestName:
+                                          description: |-
+                                            RequestName needs to be provided from resourceClaim.spec.devices.requests[].name where this
+                                            device is requested
+                                          type: string
+                                      type: object
                                     features:
                                       description: Features specifies the CPU features
                                         list inside the VMI.
