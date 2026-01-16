@@ -299,6 +299,12 @@ oci_push(
     repository = "quay.io/kubevirt/example-cloudinit-hook-sidecar",
 )
 
+oci_push(
+    name = "push-systemd-service-sidecar",
+    image = "//cmd/sidecars/systemd-service:systemd-service-sidecar-image",
+    repository = "quay.io/kubevirt/systemd-service-sidecar",
+)
+
 # container-disk images
 oci_push(
     name = "push-alpine-container-disk-demo",

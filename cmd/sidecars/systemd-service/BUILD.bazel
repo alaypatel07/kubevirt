@@ -1,0 +1,38 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_oci//oci:defs.bzl", "oci_image")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["systemd_service.go"],
+    importpath = "kubevirt.io/kubevirt/cmd/sidecars/systemd-service",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//pkg/cloud-init:go_default_library",
+        "//staging/src/kubevirt.io/api/core/v1:go_default_library",
+        "//vendor/github.com/spf13/pflag:go_default_library",
+        "//vendor/gopkg.in/yaml.v3:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "preCloudInitIso",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar(
+    name = "systemd-service-tar",
+    srcs = [":preCloudInitIso"],
+    package_dir = "/usr/bin",
+)
+
+oci_image(
+    name = "systemd-service-sidecar-image",
+    base = "//cmd/sidecars:sidecar-shim-image",
+    entrypoint = ["/sidecar-shim"],
+    tars = [
+        ":systemd-service-tar",
+    ],
+    visibility = ["//visibility:public"],
+)

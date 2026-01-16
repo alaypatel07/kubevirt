@@ -1,0 +1,82 @@
+---
+# Example VMI that uses the systemd-service hook sidecar to automatically
+# start specified systemd services when the VM boots.
+#
+# The sidecar reads the 'kubevirt.io/start-services' annotation and injects
+# cloud-init runcmd entries to enable and start the specified services.
+#
+# Services are specified as a comma-separated list. Service names without
+# a suffix will automatically have '.service' appended.
+#
+# NOTE: Custom services must be created via cloud-init write_files (as shown below)
+# or pre-installed in the container disk image.
+#
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  annotations:
+    # Configure the systemd-service hook sidecar
+    hooks.kubevirt.io/hookSidecars: '[{"args": ["--version", "v1alpha2"],
+      "image": "registry:5000/kubevirt/systemd-service-sidecar:latest"}]'
+    # Specify which services to start (comma-separated)
+    # These services will be enabled and started on every boot
+    kubevirt.io/start-services: "my-custom.service"
+  labels:
+    special: vmi-with-systemd-service-sidecar
+  name: vmi-with-systemd-service-sidecar
+spec:
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: containerdisk
+      - disk:
+          bus: virtio
+        name: cloudinitdisk
+      interfaces:
+      - masquerade: {}
+        name: default
+      rng: {}
+    memory:
+      guest: 1024M
+    resources: {}
+  networks:
+  - name: default
+    pod: {}
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: quay.io/containerdisks/fedora
+    name: containerdisk
+  - cloudInitNoCloud:
+      userData: |-
+        #cloud-config
+        password: fedora
+        chpasswd: { expire: False }
+        # Create the custom systemd service unit file
+        write_files:
+          - path: /etc/systemd/system/my-custom.service
+            content: |
+              [Unit]
+              Description=My Custom Service
+              After=network.target
+
+              [Service]
+              Type=simple
+              ExecStart=/usr/local/bin/my-custom-script.sh
+              Restart=always
+              RestartSec=5
+
+              [Install]
+              WantedBy=multi-user.target
+
+          - path: /usr/local/bin/my-custom-script.sh
+            permissions: '0755'
+            content: |
+              #!/bin/bash
+              while true; do
+                echo "Custom service running at $(date)" >> /var/log/my-custom.log
+                sleep 60
+              done
+    name: cloudinitdisk
