@@ -1,0 +1,156 @@
+---
+# VM-1: Discovers and pings vm-2 via headless service DNS
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: vm-1
+  labels:
+    app: vm-pair
+  annotations:
+    hooks.kubevirt.io/hookSidecars: '[{"args": ["--version", "v1alpha2"],
+      "image": "registry:5000/kubevirt/systemd-service-sidecar:latest"}]'
+    kubevirt.io/start-services: "vm-discovery.service"
+spec:
+  hostname: vm-1
+  subdomain: my-service
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: containerdisk
+      - disk:
+          bus: virtio
+        name: cloudinitdisk
+      interfaces:
+      - masquerade: {}
+        name: default
+      rng: {}
+    memory:
+      guest: 1024M
+    resources: {}
+  networks:
+  - name: default
+    pod: {}
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: quay.io/containerdisks/fedora
+    name: containerdisk
+  - cloudInitNoCloud:
+      userData: |-
+        #cloud-config
+        password: fedora
+        chpasswd: { expire: False }
+
+        write_files:
+          - path: /etc/systemd/system/vm-discovery.service
+            content: |
+              [Unit]
+              Description=VM Discovery Service - Ping vm-2
+              After=network-online.target
+              Wants=network-online.target
+
+              [Service]
+              Type=simple
+              ExecStart=/usr/local/bin/vm-discovery.sh
+              Restart=always
+              RestartSec=10
+
+              [Install]
+              WantedBy=multi-user.target
+
+          - path: /usr/local/bin/vm-discovery.sh
+            permissions: '0755'
+            content: |
+              #!/bin/bash
+              TARGET="vm-2.my-service"
+              LOG="/var/log/vm-discovery.log"
+              echo "Starting VM discovery service - target: $TARGET" >> $LOG
+              while true; do
+                if ping -c 1 -W 2 $TARGET > /dev/null 2>&1; then
+                  echo "$(date): $TARGET is REACHABLE" >> $LOG
+                else
+                  echo "$(date): $TARGET is UNREACHABLE" >> $LOG
+                fi
+                sleep 30
+              done
+    name: cloudinitdisk
+---
+# VM-2: Discovers and pings vm-1 via headless service DNS
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: vm-2
+  labels:
+    app: vm-pair
+  annotations:
+    hooks.kubevirt.io/hookSidecars: '[{"args": ["--version", "v1alpha2"],
+      "image": "registry:5000/kubevirt/systemd-service-sidecar:latest"}]'
+    kubevirt.io/start-services: "vm-discovery.service"
+spec:
+  hostname: vm-2
+  subdomain: my-service
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: containerdisk
+      - disk:
+          bus: virtio
+        name: cloudinitdisk
+      interfaces:
+      - masquerade: {}
+        name: default
+      rng: {}
+    memory:
+      guest: 1024M
+    resources: {}
+  networks:
+  - name: default
+    pod: {}
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: quay.io/containerdisks/fedora
+    name: containerdisk
+  - cloudInitNoCloud:
+      userData: |-
+        #cloud-config
+        password: fedora
+        chpasswd: { expire: False }
+
+        write_files:
+          - path: /etc/systemd/system/vm-discovery.service
+            content: |
+              [Unit]
+              Description=VM Discovery Service - Ping vm-1
+              After=network-online.target
+              Wants=network-online.target
+
+              [Service]
+              Type=simple
+              ExecStart=/usr/local/bin/vm-discovery.sh
+              Restart=always
+              RestartSec=10
+
+              [Install]
+              WantedBy=multi-user.target
+
+          - path: /usr/local/bin/vm-discovery.sh
+            permissions: '0755'
+            content: |
+              #!/bin/bash
+              TARGET="vm-1.my-service"
+              LOG="/var/log/vm-discovery.log"
+              echo "Starting VM discovery service - target: $TARGET" >> $LOG
+              while true; do
+                if ping -c 1 -W 2 $TARGET > /dev/null 2>&1; then
+                  echo "$(date): $TARGET is REACHABLE" >> $LOG
+                else
+                  echo "$(date): $TARGET is UNREACHABLE" >> $LOG
+                fi
+                sleep 30
+              done
+    name: cloudinitdisk
