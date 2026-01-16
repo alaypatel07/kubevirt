@@ -23,7 +23,7 @@ spec:
           bus: virtio
         name: cloudinitdisk
       interfaces:
-      - masquerade: {}
+      - bridge: {}
         name: default
       rng: {}
     memory:
@@ -43,7 +43,38 @@ spec:
         password: fedora
         chpasswd: { expire: False }
 
+        # Use Kubernetes DNS (ClusterIP)
+        # NOTE: Update this IP to your cluster's kube-dns ClusterIP
+        # Find it with: kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}'
+        # Common values: 10.96.0.10 (default), 10.64.0.10 (some Kind clusters)
+        manage_resolv_conf: true
+        resolv_conf:
+          nameservers:
+            - 10.96.0.10
+          searchdomains:
+            - default.svc.cluster.local
+            - svc.cluster.local
+            - cluster.local
+
+        # Fix routing for kindnet point-to-point networking
+        # NetworkManager dispatcher script removes the /24 local route on every network up event
+        runcmd:
+          - chmod +x /etc/NetworkManager/dispatcher.d/99-fix-kindnet-route
+          - /etc/NetworkManager/dispatcher.d/99-fix-kindnet-route
+
         write_files:
+          - path: /etc/NetworkManager/dispatcher.d/99-fix-kindnet-route
+            permissions: '0755'
+            content: |
+              #!/bin/bash
+              # Fix for kindnet point-to-point networking
+              # KubeVirt DHCP gives /24 netmask which adds a local route that breaks pod-to-pod routing
+              IFACE=$(ip route | grep "^default" | awk '{print $5}')
+              CIDR=$(ip route | grep "proto kernel" | grep "$IFACE" | awk '{print $1}')
+              if [ -n "$CIDR" ]; then
+                ip route del "$CIDR" dev "$IFACE" 2>/dev/null || true
+              fi
+
           - path: /etc/systemd/system/vm-discovery.service
             content: |
               [Unit]
@@ -64,7 +95,7 @@ spec:
             permissions: '0755'
             content: |
               #!/bin/bash
-              TARGET="vm-2.my-service"
+              TARGET="vm-2.my-service.default.svc.cluster.local"
               LOG="/var/log/vm-discovery.log"
               echo "Starting VM discovery service - target: $TARGET" >> $LOG
               while true; do
@@ -101,7 +132,7 @@ spec:
           bus: virtio
         name: cloudinitdisk
       interfaces:
-      - masquerade: {}
+      - bridge: {}
         name: default
       rng: {}
     memory:
@@ -121,7 +152,38 @@ spec:
         password: fedora
         chpasswd: { expire: False }
 
+        # Use Kubernetes DNS (ClusterIP)
+        # NOTE: Update this IP to your cluster's kube-dns ClusterIP
+        # Find it with: kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}'
+        # Common values: 10.96.0.10 (default), 10.64.0.10 (some Kind clusters)
+        manage_resolv_conf: true
+        resolv_conf:
+          nameservers:
+            - 10.96.0.10
+          searchdomains:
+            - default.svc.cluster.local
+            - svc.cluster.local
+            - cluster.local
+
+        # Fix routing for kindnet point-to-point networking
+        # NetworkManager dispatcher script removes the /24 local route on every network up event
+        runcmd:
+          - chmod +x /etc/NetworkManager/dispatcher.d/99-fix-kindnet-route
+          - /etc/NetworkManager/dispatcher.d/99-fix-kindnet-route
+
         write_files:
+          - path: /etc/NetworkManager/dispatcher.d/99-fix-kindnet-route
+            permissions: '0755'
+            content: |
+              #!/bin/bash
+              # Fix for kindnet point-to-point networking
+              # KubeVirt DHCP gives /24 netmask which adds a local route that breaks pod-to-pod routing
+              IFACE=$(ip route | grep "^default" | awk '{print $5}')
+              CIDR=$(ip route | grep "proto kernel" | grep "$IFACE" | awk '{print $1}')
+              if [ -n "$CIDR" ]; then
+                ip route del "$CIDR" dev "$IFACE" 2>/dev/null || true
+              fi
+
           - path: /etc/systemd/system/vm-discovery.service
             content: |
               [Unit]
@@ -142,7 +204,7 @@ spec:
             permissions: '0755'
             content: |
               #!/bin/bash
-              TARGET="vm-1.my-service"
+              TARGET="vm-1.my-service.default.svc.cluster.local"
               LOG="/var/log/vm-discovery.log"
               echo "Starting VM discovery service - target: $TARGET" >> $LOG
               while true; do
