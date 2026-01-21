@@ -1,0 +1,12 @@
+---
+# ConfigMap containing IMEX nodes configuration
+# Update this ConfigMap to add/remove nodes from the IMEX cluster
+# Changes propagate to all VMs via virtiofs mount
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: imex-nodes-config
+data:
+  nodes_config.cfg: |
+    imex-vm-1.imex-service.default.svc.cluster.local
+    imex-vm-2.imex-service.default.svc.cluster.local

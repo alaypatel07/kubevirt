@@ -1,0 +1,26 @@
+---
+# Headless Service for NVIDIA IMEX peer discovery
+# Enables VMs to discover each other using DNS:
+#   imex-vm-1.imex-service.<namespace>.svc.cluster.local
+#   imex-vm-2.imex-service.<namespace>.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: imex-service
+spec:
+  clusterIP: None  # Headless service for DNS-based discovery
+  selector:
+    app: imex-pair
+  ports:
+    - port: 50000
+      targetPort: 50000
+      name: imex-peer
+      protocol: TCP
+    - port: 50005
+      targetPort: 50005
+      name: imex-cmd
+      protocol: TCP
+    - port: 22
+      targetPort: 22
+      name: ssh
+      protocol: TCP

@@ -1,0 +1,90 @@
+---
+# IMEX VM-1: First node in the IMEX cluster
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: imex-vm-1
+  labels:
+    app: imex-pair
+spec:
+  hostname: imex-vm-1
+  subdomain: imex-service
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: containerdisk
+      - disk:
+          bus: virtio
+        name: cloudinitdisk
+      filesystems:
+      - name: imex-config
+        virtiofs: {}
+      interfaces:
+      - bridge: {}
+        name: default
+      rng: {}
+    memory:
+      guest: 2048M
+    resources: {}
+  networks:
+  - name: default
+    pod: {}
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: quay.io/containerdisks/fedora
+    name: containerdisk
+  - cloudInitNoCloud:
+      secretRef:
+        name: imex-cloudinit
+    name: cloudinitdisk
+  - configMap:
+      name: imex-nodes-config
+    name: imex-config
+---
+# IMEX VM-2: Second node in the IMEX cluster
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: imex-vm-2
+  labels:
+    app: imex-pair
+spec:
+  hostname: imex-vm-2
+  subdomain: imex-service
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: containerdisk
+      - disk:
+          bus: virtio
+        name: cloudinitdisk
+      filesystems:
+      - name: imex-config
+        virtiofs: {}
+      interfaces:
+      - bridge: {}
+        name: default
+      rng: {}
+    memory:
+      guest: 2048M
+    resources: {}
+  networks:
+  - name: default
+    pod: {}
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: quay.io/containerdisks/fedora
+    name: containerdisk
+  - cloudInitNoCloud:
+      secretRef:
+        name: imex-cloudinit
+    name: cloudinitdisk
+  - configMap:
+      name: imex-nodes-config
+    name: imex-config

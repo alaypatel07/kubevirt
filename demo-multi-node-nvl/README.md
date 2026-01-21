@@ -21,3 +21,4 @@ This folder contains demos for KubeVirt features related to multi-node NVL workl
 |------|-------------|
 | [systemd-service-demo](systemd-service-demo/) | Start systemd services on VM boot using a hook sidecar |
 | [vm-discovery-demo](vm-discovery-demo/) | Two VMs discovering each other via headless service DNS |
+| [imex-demo](imex-demo/) | NVIDIA IMEX daemon running in --nogpu mode for multi-node communication testing |
