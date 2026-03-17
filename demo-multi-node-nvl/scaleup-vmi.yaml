@@ -16,6 +16,9 @@ spec:
       - disk:
           bus: virtio
         name: cloudinitdisk
+      filesystems:
+      - name: imex-nodes-config
+        virtiofs: {}
     resources:
       requests:
         memory: 5120M
@@ -28,3 +31,6 @@ spec:
       secretRef:
         name: imex-cloudinit
     name: cloudinitdisk
+  - configMap:
+      name: imex-nodes-config
+    name: imex-nodes-config

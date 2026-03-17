@@ -1,5 +1,17 @@
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: imex-nodes-config
+data:
+  nodes_config.cfg: |
+    imex-vm-01.imex-service.default.svc.cluster.local
+    imex-vm-02.imex-service.default.svc.cluster.local
+    imex-vm-03.imex-service.default.svc.cluster.local
+    imex-vm-04.imex-service.default.svc.cluster.local
+    imex-vm-05.imex-service.default.svc.cluster.local
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: imex-cloudinit
@@ -19,35 +31,6 @@ stringData:
           enabled=1
           gpgcheck=1
           gpgkey=https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/D42D0685.pub
-      - path: /etc/nvidia-imex/nodes_config.cfg
-        permissions: '0644'
-        content: |
-          imex-vm-01.imex-service.default.svc.cluster.local
-          imex-vm-02.imex-service.default.svc.cluster.local
-          imex-vm-03.imex-service.default.svc.cluster.local
-          imex-vm-04.imex-service.default.svc.cluster.local
-          imex-vm-05.imex-service.default.svc.cluster.local
-      - path: /etc/nvidia-imex/config.cfg
-        permissions: '0644'
-        content: |
-          LOG_LEVEL=4
-          LOG_FILE_NAME=/var/log/nvidia-imex.log
-          LOG_APPEND_TO_LOG=1
-          LOG_FILE_MAX_SIZE=1024
-          LOG_MAX_ROTATE_COUNT=10
-          LOG_USE_SYSLOG=0
-          DAEMONIZE=0
-          BIND_INTERFACE_IP=
-          SERVER_PORT=50000
-          IMEX_NODE_CONFIG_FILE=/etc/nvidia-imex/nodes_config.cfg
-          NETWORK_INTERFACE=
-          IMEX_WAIT_FOR_QUORUM=NONE
-          IMEX_ENABLE_AUTH_ENCRYPTION=0
-          IMEX_CMD_ENABLED=1
-          IMEX_CMD_BIND_INTERFACE_IP=
-          IMEX_CMD_PORT=50005
-          IMEX_CMD_UNIX_DOMAIN_PATH=
-          IMEX_NODE_DISCONNECTED_GRACE_TIME=-1
       - path: /etc/systemd/system/nvidia-imex.service
         permissions: '0644'
         content: |
@@ -58,8 +41,8 @@ stringData:
           Requires=setup-imex.service
 
           [Service]
-          Type=simple
-          ExecStart=/usr/bin/nvidia-imex -c /etc/nvidia-imex/config.cfg --nogpu
+          Type=forking
+          ExecStart=/usr/bin/nvidia-imex --nogpu
           Restart=on-failure
           RestartSec=5
 
@@ -83,6 +66,9 @@ stringData:
           WantedBy=multi-user.target
     runcmd:
       - mkdir -p /etc/nvidia-imex
+      - mkdir -p /mnt/imex-config
+      - mount -t virtiofs imex-nodes-config /mnt/imex-config
+      - ln -sf /mnt/imex-config/nodes_config.cfg /etc/nvidia-imex/nodes_config.cfg
       - systemctl daemon-reload
       - systemctl enable --now setup-imex.service
       - systemctl enable --now nvidia-imex.service
@@ -105,6 +91,9 @@ spec:
       - disk:
           bus: virtio
         name: cloudinitdisk
+      filesystems:
+      - name: imex-nodes-config
+        virtiofs: {}
     resources:
       requests:
         memory: 5120M
@@ -117,6 +106,9 @@ spec:
       secretRef:
         name: imex-cloudinit
     name: cloudinitdisk
+  - configMap:
+      name: imex-nodes-config
+    name: imex-nodes-config
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachineInstance
@@ -136,6 +128,9 @@ spec:
       - disk:
           bus: virtio
         name: cloudinitdisk
+      filesystems:
+      - name: imex-nodes-config
+        virtiofs: {}
     resources:
       requests:
         memory: 5120M
@@ -148,6 +143,9 @@ spec:
       secretRef:
         name: imex-cloudinit
     name: cloudinitdisk
+  - configMap:
+      name: imex-nodes-config
+    name: imex-nodes-config
 ---
 apiVersion: v1
 kind: Service

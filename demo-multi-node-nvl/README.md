@@ -1,14 +1,70 @@
-# IMEX Network Demo — Dynamic Scale Up/Down
+# IMEX Network Demo — Pre-configured Domain with Scale Up/Down
 
-Demonstrates NVIDIA IMEX daemon running across KubeVirt VMIs with DNS-based peer discovery via a Kubernetes headless service. The IMEX domain is pre-configured with 5 slots, but only a subset of VMs need to be running at any time.
+Demonstrates NVIDIA IMEX daemon running across KubeVirt VMIs with DNS-based peer discovery via a Kubernetes headless service. The `nodes_config.cfg` is pre-populated with the full domain size (5 nodes) and mounted via virtiofs from a ConfigMap. IMEX tolerates missing peers, so VMs can be added or removed without changing the config or restarting daemons on existing VMs.
 
 ## Architecture
 
-- **Headless Service** (`imex-service`) provides stable DNS names for each VMI: `imex-vm-XX.imex-service.default.svc.cluster.local`
-- **Shared Secret** (`imex-cloudinit`) contains cloud-init that installs and configures IMEX on boot
-- **nodes_config.cfg** is pre-populated with all 5 DNS hostnames — IMEX retries unreachable peers indefinitely (`IMEX_NODE_DISCONNECTED_GRACE_TIME=-1`)
-- When a VMI is created, CoreDNS resolves its hostname to the new pod IP and IMEX auto-connects
-- When a VMI is deleted, IMEX detects the disconnect and waits for it to return
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  Kubernetes Cluster                                                 │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  Headless Service: imex-service  (clusterIP: None)            │  │
+│  │                                                               │  │
+│  │  CoreDNS creates per-pod DNS records:                         │  │
+│  │    imex-vm-01.imex-service.default.svc.cluster.local → Pod IP │  │
+│  │    imex-vm-02.imex-service.default.svc.cluster.local → Pod IP │  │
+│  │    imex-vm-03.imex-service.default.svc.cluster.local → Pod IP │  │
+│  │    imex-vm-04 ... (no endpoint yet, DNS fails, IMEX retries)  │  │
+│  │    imex-vm-05 ... (no endpoint yet, DNS fails, IMEX retries)  │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│         ▲              ▲              ▲                              │
+│         │ hostname/    │ hostname/    │ hostname/                    │
+│         │ subdomain    │ subdomain    │ subdomain                    │
+│  ┌──────┴──────┐┌──────┴──────┐┌──────┴──────┐                     │
+│  │  VMI:       ││  VMI:       ││  VMI:       │                     │
+│  │  imex-vm-01 ││  imex-vm-02 ││  imex-vm-03 │  (vm-04,05 not     │
+│  │             ││             ││             │   created yet)       │
+│  │ ┌─────────┐ ││ ┌─────────┐ ││ ┌─────────┐ │                     │
+│  │ │ IMEX    │◄┼┼─┤ IMEX    │◄┼┼─┤ IMEX    │ │  gRPC mesh on      │
+│  │ │ daemon  ├─┼┼►│ daemon  ├─┼┼►│ daemon  │ │  port 50000        │
+│  │ └────┬────┘ ││ └────┬────┘ ││ └────┬────┘ │                     │
+│  │      │      ││      │      ││      │      │                     │
+│  │      ▼      ││      ▼      ││      ▼      │                     │
+│  │ /etc/nvidia-││ /etc/nvidia-││ /etc/nvidia-│                     │
+│  │ imex/nodes_ ││ imex/nodes_ ││ imex/nodes_ │                     │
+│  │ config.cfg  ││ config.cfg  ││ config.cfg  │                     │
+│  │   (symlink) ││   (symlink) ││   (symlink) │                     │
+│  │      │      ││      │      ││      │      │                     │
+│  │      ▼      ││      ▼      ││      ▼      │                     │
+│  │  virtiofs   ││  virtiofs   ││  virtiofs   │                     │
+│  │  mount      ││  mount      ││  mount      │                     │
+│  └──────┬──────┘└──────┬──────┘└──────┬──────┘                     │
+│         │              │              │                              │
+│         └──────────────┼──────────────┘                              │
+│                        ▼                                             │
+│  ┌─────────────────────────────────────┐                            │
+│  │  ConfigMap: imex-nodes-config       │                            │
+│  │                                     │                            │
+│  │  nodes_config.cfg:                  │                            │
+│  │    imex-vm-01.imex-service...       │                            │
+│  │    imex-vm-02.imex-service...       │                            │
+│  │    imex-vm-03.imex-service...       │                            │
+│  │    imex-vm-04.imex-service...       │                            │
+│  │    imex-vm-05.imex-service...       │                            │
+│  └─────────────────────────────────────┘                            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**How the headless service works**: A normal Kubernetes Service gets a single ClusterIP that load-balances across pods. A headless service (`clusterIP: None`) skips the load balancer — instead, CoreDNS creates individual A records for each pod that sets `hostname` and `subdomain` matching the service name. This gives each VMI a stable, resolvable DNS name that maps directly to its pod IP. When a VMI is deleted, its DNS record disappears; when recreated, it gets a new IP and a new DNS record under the same hostname.
+
+Since the config lists all possible nodes upfront, IMEX on each VM continuously retries connections to peers that aren't running yet. When a new VM boots, existing daemons connect to it automatically on the next retry cycle — no config changes or daemon restarts needed.
+
+### Key IMEX behaviors
+
+- The daemon only reads `nodes_config.cfg` at startup. `SIGUSR1` triggers DNS re-resolution for the existing node list but does **not** re-read the config file.
+- `IMEX_NODE_DISCONNECTED_GRACE_TIME=-1` (default): waits indefinitely for disconnected peers, so removing a VM doesn't trigger cleanup on the remaining nodes.
+- `IMEX_WAIT_FOR_QUORUM=RECOVERY` (default): on first boot, starts immediately without waiting for all peers.
 
 ## Prerequisites
 
@@ -22,11 +78,12 @@ kubectl create -f demo-multi-node-nvl/vmi.yaml
 ```
 
 This creates:
-- Secret `imex-cloudinit` (shared cloud-init with IMEX config for 5 nodes)
+- ConfigMap `imex-nodes-config` (pre-populated with 5-node domain)
+- Secret `imex-cloudinit` (shared cloud-init that installs IMEX and mounts the ConfigMap)
 - VMIs `imex-vm-01` and `imex-vm-02`
 - Headless Service `imex-service`
 
-Wait a few minutes for the VMs to boot, install `nvidia-imex` via `dnf`, and start the daemon.
+Wait a few minutes for the VMs to boot, install `nvidia-imex` via `dnf`, and start the daemon. IMEX will connect to the 2 running peers and keep retrying the 3 absent ones in the background.
 
 ## Verify
 
@@ -43,27 +100,27 @@ systemctl status nvidia-imex
 tail -f /var/log/nvidia-imex.log
 ```
 
-You should see connections established to all running peers and retry attempts for the nodes that aren't running yet.
+You should see connections established to the running peer and retry attempts for the absent nodes.
 
 ## Scale Up
 
-Add a third VM to the domain:
+Just create a new VMI — no config changes needed:
 
 ```bash
 kubectl create -f demo-multi-node-nvl/scaleup-vmi.yaml
 ```
 
-After boot and IMEX install (~2-3 minutes), check the logs on any running VM — you should see a new connection established to `imex-vm-03`.
+Once `imex-vm-03` boots and its IMEX daemon starts, the existing daemons on `imex-vm-01` and `imex-vm-02` will connect to it on their next retry cycle (within seconds).
 
 ## Scale Down
 
-Remove the third VM:
+Just delete the VMI:
 
 ```bash
 kubectl delete -f demo-multi-node-nvl/scaleup-vmi.yaml
 ```
 
-IMEX on the remaining VMs will detect the disconnect and continue retrying indefinitely until `imex-vm-03` comes back.
+IMEX on the remaining VMs will detect the disconnect and wait indefinitely (`IMEX_NODE_DISCONNECTED_GRACE_TIME=-1`), retrying until the peer comes back.
 
 ## Teardown
 
@@ -71,37 +128,18 @@ IMEX on the remaining VMs will detect the disconnect and continue retrying indef
 kubectl delete -f demo-multi-node-nvl/vmi.yaml
 ```
 
-## IMEX Configuration Details
+## IMEX Configuration
 
-| Setting | Value | Purpose |
-|---------|-------|---------|
-| `DAEMONIZE` | `0` | Run in foreground (systemd manages lifecycle) |
-| `IMEX_WAIT_FOR_QUORUM` | `NONE` | Start without waiting for all peers |
-| `IMEX_NODE_DISCONNECTED_GRACE_TIME` | `-1` | Wait indefinitely for disconnected peers |
-| `SERVER_PORT` | `50000` | IMEX peer communication port |
-| `IMEX_CMD_PORT` | `50005` | IMEX command/control port |
-| `--nogpu` | flag | Run without GPU hardware present |
+No custom `config.cfg` is needed — all IMEX defaults are used. The systemd service uses `Type=forking` to match the daemon's default `DAEMONIZE=1` behavior. Key defaults:
 
-## Future Work: Dynamic nodes_config.cfg via Virtiofs + ConfigMap
-
-The current demo pre-populates `nodes_config.cfg` at boot via cloud-init with a fixed set of hostnames. This means the domain size is static — adding a 6th node requires updating the secret and restarting all VMs.
-
-To make the node list truly dynamic, mount `nodes_config.cfg` from a Kubernetes ConfigMap via virtiofs:
-
-1. Create a ConfigMap with the current node list
-2. Add a `filesystems` entry to the VMI spec with `virtiofs: {}`
-3. Add the ConfigMap as a volume
-4. Inside the VM, mount the virtiofs filesystem and symlink `nodes_config.cfg`
-5. Update the ConfigMap when nodes join/leave — changes propagate to all VMs immediately
-6. Send `SIGUSR1` to the IMEX process to trigger re-read and DNS re-resolution (see `k8s-dra-driver-gpu` `IMEXDaemonUpdateLoopWithDNSNames` for reference)
-
-This is the approach used by the `compute-domain-daemon` in `k8s-dra-driver-gpu`. The key difference from the current static approach: the domain size can change at runtime without restarting IMEX or the VMs.
-
-The IMEX config overrides (`DAEMONIZE=0`, `IMEX_WAIT_FOR_QUORUM=NONE`) would remain in cloud-init since they don't change, but `nodes_config.cfg` would come from the virtiofs-mounted ConfigMap.
+| Setting | Default | Effect |
+|---------|---------|--------|
+| `IMEX_WAIT_FOR_QUORUM` | `RECOVERY` | First boot starts immediately; after crash, waits for previously-connected peers |
+| `IMEX_NODE_DISCONNECTED_GRACE_TIME` | `-1` | Waits indefinitely for disconnected peers to reconnect |
 
 ## Files
 
 | File | Description |
 |------|-------------|
-| `vmi.yaml` | Secret + 2 VMIs + headless service (5-node domain) |
+| `vmi.yaml` | ConfigMap (5-node domain) + Secret + 2 VMIs + headless service |
 | `scaleup-vmi.yaml` | Third VMI for scale-up testing |
