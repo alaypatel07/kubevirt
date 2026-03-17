@@ -82,6 +82,23 @@ kubectl delete -f demo-multi-node-nvl/vmi.yaml
 | `IMEX_CMD_PORT` | `50005` | IMEX command/control port |
 | `--nogpu` | flag | Run without GPU hardware present |
 
+## Future Work: Dynamic nodes_config.cfg via Virtiofs + ConfigMap
+
+The current demo pre-populates `nodes_config.cfg` at boot via cloud-init with a fixed set of hostnames. This means the domain size is static — adding a 6th node requires updating the secret and restarting all VMs.
+
+To make the node list truly dynamic, mount `nodes_config.cfg` from a Kubernetes ConfigMap via virtiofs:
+
+1. Create a ConfigMap with the current node list
+2. Add a `filesystems` entry to the VMI spec with `virtiofs: {}`
+3. Add the ConfigMap as a volume
+4. Inside the VM, mount the virtiofs filesystem and symlink `nodes_config.cfg`
+5. Update the ConfigMap when nodes join/leave — changes propagate to all VMs immediately
+6. Send `SIGUSR1` to the IMEX process to trigger re-read and DNS re-resolution (see `k8s-dra-driver-gpu` `IMEXDaemonUpdateLoopWithDNSNames` for reference)
+
+This is the approach used by the `compute-domain-daemon` in `k8s-dra-driver-gpu`. The key difference from the current static approach: the domain size can change at runtime without restarting IMEX or the VMs.
+
+The IMEX config overrides (`DAEMONIZE=0`, `IMEX_WAIT_FOR_QUORUM=NONE`) would remain in cloud-init since they don't change, but `nodes_config.cfg` would come from the virtiofs-mounted ConfigMap.
+
 ## Files
 
 | File | Description |
